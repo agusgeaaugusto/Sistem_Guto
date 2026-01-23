@@ -1,0 +1,647 @@
+/* =========================================================
+   Carvallo Bodega — UI de Formularios (excepto Venta)
+   Archivo: app-forms.css
+   Objetivo: formularios legibles SIEMPRE (fondo claro ↔ texto oscuro / fondo oscuro ↔ texto claro)
+   ========================================================= */
+
+/* =========================================================
+   1) VARIABLES (Tema por defecto: DARK)
+   - Si algún formulario (editar) usa fondo claro, agregá la clase .is-light al contenedor:
+       <div class="form-card is-light"> ... </div>
+     o al modal:
+       <div class="modal is-open is-light"> ... </div>
+   ========================================================= */
+:root{
+  /* --- Paleta base (Dark) --- */
+  --ui-bg:#0c0d12;
+  --ui-surface:#11131a;
+  --ui-surface-2:#151823;
+
+  --ui-border:rgba(255,255,255,0.10);
+  --ui-border-strong:rgba(255,255,255,0.16);
+
+  --ui-text:#e6e9ef;
+  --ui-muted:#9aa4b2;
+  --ui-placeholder:#7f8aa3;
+
+  --ui-primary:#19d3da;
+  --ui-primary-2:#7c5cff;
+
+  --ui-success:#22c55e;
+  --ui-warning:#f59e0b;
+  --ui-danger:#ef4444;
+
+  --ui-radius:16px;
+  --ui-shadow-1:0 8px 24px rgba(0,0,0,.35);
+  --ui-shadow-2:0 20px 60px rgba(0,0,0,.45);
+
+  --ui-focus:0 0 0 3px rgba(25,211,218,.22), 0 0 0 1px var(--ui-primary);
+
+  /* --- Compactación global --- */
+  --ui-input-h:34px;
+  --ui-gap:8px;
+
+  /* --- Tablas --- */
+  --ui-table-font:12.5px;
+  --ui-table-pad-y:6px;
+  --ui-table-pad-x:8px;
+
+  /* --- Inputs (Dark) --- */
+  --ui-input-bg:rgba(255,255,255,0.06);
+  --ui-input-bg-focus:rgba(25,211,218,0.10);
+  --ui-input-text:var(--ui-text);
+  --ui-input-border:var(--ui-border);
+}
+
+/* =========================================================
+   2) TEMA CLARO (opt-in con clase .is-light)
+   - Lo aplicamos por variables: fondo claro + texto oscuro
+   ========================================================= */
+.is-light{
+  --ui-bg:#f6f7fb;
+  --ui-surface:#ffffff;
+  --ui-surface-2:#f3f4f8;
+
+  --ui-border:rgba(15,23,42,0.14);
+  --ui-border-strong:rgba(15,23,42,0.18);
+
+  --ui-text:#0f172a;
+  --ui-muted:#475569;
+  --ui-placeholder:#64748b;
+
+  --ui-input-bg:#ffffff;
+  --ui-input-bg-focus:rgba(25,211,218,0.14);
+  --ui-input-text:#0f172a;
+  --ui-input-border:rgba(15,23,42,0.18);
+
+  --ui-shadow-1:0 8px 18px rgba(15,23,42,.10);
+  --ui-shadow-2:0 22px 55px rgba(15,23,42,.16);
+}
+
+/* =========================================================
+   3) RESET MÍNIMO
+   ========================================================= */
+*,
+*::before,
+*::after{ box-sizing:border-box; }
+
+html,body{ height:100%; }
+
+/* ⚠️ Importante:
+   Si tu sistema usa un body con color fijo de otro CSS, este puede interferir.
+   Este archivo maneja color/tema para formularios. */
+body{
+  background: radial-gradient(1200px circle at 10% -10%, #0e1220 0%, #0a0b10 45%, #08090e 100%);
+  color:var(--ui-text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  line-height:1.35;
+}
+
+/* =========================================================
+   4) CONTENEDORES (Tarjetas / Secciones)
+   ========================================================= */
+/* [FORM-CARD] Contenedor principal de formularios */
+.form-card{
+  background: linear-gradient(180deg, var(--ui-surface) 0%, var(--ui-surface-2) 100%);
+  border:1px solid var(--ui-border);
+  border-radius:var(--ui-radius);
+  box-shadow:var(--ui-shadow-1);
+  padding:12px;
+  color:var(--ui-text);
+}
+
+/* [FORM-TITLE] Título del formulario */
+.form-title{
+  display:flex; align-items:center; gap:10px;
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight:700;
+  color:var(--ui-text);
+  margin:0 0 6px 0;
+}
+
+/* [FORM-SUBTITLE] Subtítulo / aclaraciones */
+.form-subtitle{
+  margin:0 0 12px 0;
+  color:var(--ui-muted);
+  font-size:13px;
+}
+
+/* =========================================================
+   5) FORMULARIOS (excepto ventas)
+   ========================================================= */
+/* [APP-FORM] Layout general del form */
+.app-form:not(.venta-form){
+  display:grid;
+  grid-template-columns:1fr;
+  gap:calc(var(--ui-gap) + 2px);
+}
+
+/* [APP-FORM] Columnas */
+@media (min-width:860px){
+  .app-form:not(.venta-form).cols-2{ grid-template-columns:1fr 1fr; }
+  .app-form:not(.venta-form).cols-3{ grid-template-columns:1fr 1fr 1fr; }
+}
+
+/* [FIELD] Campo individual */
+.field{ display:grid; gap:6px; }
+.field.span-2{ grid-column:1 / -1; }
+
+/* [LABEL] Etiqueta */
+.label{
+  font-size:11.5px;
+  color:var(--ui-muted);
+  letter-spacing:.2px;
+}
+
+/* [CONTROL] Contenedor del input + iconos */
+.control{ position:relative; display:flex; align-items:center; }
+
+/* =========================================================
+   6) CONTROLES (Inputs, Select, Textarea)
+   ========================================================= */
+/* [INPUT] Input básico */
+.input,
+.select,
+.textarea{
+  width:100%;
+  background: var(--ui-input-bg);
+  border:1px solid var(--ui-input-border);
+  border-radius:12px;
+  color:var(--ui-input-text);
+  padding:7px 9px;
+  height:var(--ui-input-h);
+  outline:none;
+  transition: box-shadow .15s ease, border-color .15s ease, background .2s ease;
+}
+
+/* [TEXTAREA] */
+.textarea{
+  min-height:96px;
+  height:auto;
+  resize:vertical;
+  padding:9px;
+}
+
+/* [PLACEHOLDER] */
+.input::placeholder,
+.textarea::placeholder{
+  color:var(--ui-placeholder);
+}
+
+/* [FOCUS] */
+.input:focus,
+.select:focus,
+.textarea:focus{
+  box-shadow:var(--ui-focus);
+  border-color:var(--ui-primary);
+  background: var(--ui-input-bg-focus);
+}
+
+/* [ICON-LEFT] Input con ícono */
+.control.has-icon .input{ padding-left:36px; }
+.control .icon-left{
+  position:absolute;
+  left:10px;
+  width:18px; height:18px;
+  opacity:.78;
+  pointer-events:none;
+}
+
+/* [VALIDATION] Estados */
+.input.is-valid,
+.select.is-valid,
+.textarea.is-valid{ border-color:rgba(34,197,94,.55); }
+
+.input.is-invalid,
+.select.is-invalid,
+.textarea.is-invalid{ border-color:rgba(239,68,68,.65); }
+
+/* [HELPER] Texto de ayuda */
+.helper{
+  color:var(--ui-muted);
+  font-size:12px;
+  margin-top:4px;
+}
+
+/* [ERROR] Mensaje de error */
+.error{
+  color:#ff6b6b;
+  font-size:12px;
+  margin-top:4px;
+}
+
+/* =========================================================
+   7) SELECT ESTILIZADO
+   ========================================================= */
+.select{
+  appearance:none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ui-muted) 50%),
+    linear-gradient(135deg, var(--ui-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(.95em + 1px),
+                      calc(100% - 13px) calc(.95em + 1px);
+  background-size:5px 5px, 5px 5px;
+  background-repeat:no-repeat;
+  padding-right:34px;
+}
+
+/* =========================================================
+   8) CHECKBOX / RADIO
+   ========================================================= */
+/* [CHOICE] Opción tipo checkbox/radio */
+.choice{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+  user-select:none;
+  color:var(--ui-text);
+  font-size:14px;
+}
+
+/* Caja base */
+.choice input{
+  appearance:none;
+  width:18px; height:18px;
+  border-radius:6px;                 /* checkbox */
+  border:1px solid var(--ui-border-strong);
+  background: var(--ui-input-bg);
+  display:inline-grid;
+  place-items:center;
+  transition:all .15s ease;
+}
+.choice input[type="radio"]{ border-radius:50%; }
+
+/* Checked */
+.choice input:checked{
+  border-color:var(--ui-primary);
+  background:rgba(25,211,218,0.22);
+  box-shadow:var(--ui-focus);
+}
+
+/* ✅ Checkbox: check */
+.choice input[type="checkbox"]:checked::after{
+  content:"";
+  width:9px; height:5px;
+  border-left:2px solid var(--ui-primary);
+  border-bottom:2px solid var(--ui-primary);
+  transform:rotate(-45deg);
+  margin-top:-1px;
+}
+
+/* ✅ Radio: dot */
+.choice input[type="radio"]:checked::after{
+  content:"";
+  width:10px; height:10px;
+  border-radius:50%;
+  background:var(--ui-primary);
+}
+
+/* =========================================================
+   9) FILE INPUT (dropzone simple)
+   ========================================================= */
+/* [FILE] Área de archivo */
+.file{
+  border:1px dashed var(--ui-border-strong);
+  background:rgba(255,255,255,0.02);
+  border-radius:14px;
+  padding:12px;
+  text-align:center;
+  color:var(--ui-muted);
+}
+.file:hover{
+  border-color:var(--ui-primary);
+  color:var(--ui-text);
+}
+
+/* =========================================================
+   10) INPUT GROUP (botón al lado)
+   ========================================================= */
+/* [INPUT-GROUP] */
+.input-group{ display:flex; align-items:stretch; gap:8px; }
+.input-group .input{ flex:1; }
+.input-group .btn{ white-space:nowrap; }
+
+/* =========================================================
+   11) BOTONES
+   ========================================================= */
+/* [BTN] Botón principal */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  height:var(--ui-input-h);
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid transparent;
+  font-weight:600;
+  letter-spacing:.2px;
+  cursor:pointer;
+
+  color:#071319;
+  background:linear-gradient(180deg, var(--ui-primary) 0%, #11aab0 100%);
+  box-shadow:0 6px 18px rgba(25,211,218,.22);
+
+  transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
+}
+.btn:hover{ filter:brightness(1.05); }
+.btn:active{ transform:translateY(1px); }
+
+/* [BTN-SECONDARY] */
+.btn.secondary{
+  background:linear-gradient(180deg, #7c5cff 0%, #5b43d6 100%);
+  color:#ffffff;
+  box-shadow:0 6px 18px rgba(124,92,255,.20);
+}
+
+/* [BTN-GHOST] */
+.btn.ghost{
+  background:transparent;
+  color:var(--ui-text);
+  border-color:var(--ui-border-strong);
+  box-shadow:none;
+}
+
+/* [BTN-DANGER] */
+.btn.danger{
+  background:linear-gradient(180deg, #ef4444 0%, #c92f2f 100%);
+  color:#ffffff;
+  box-shadow:0 6px 18px rgba(239,68,68,.20);
+}
+
+/* [BTN-DISABLED] */
+.btn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  box-shadow:none;
+  filter:saturate(.8);
+}
+
+/* =========================================================
+   12) ACCIONES DEL FORMULARIO
+   ========================================================= */
+/* [FORM-ACTIONS] Pie con botones (Guardar/Cancelar/etc.) */
+.form-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:flex-end;
+  margin-top:4px;
+}
+
+/* =========================================================
+   13) SEPARADOR
+   ========================================================= */
+/* [HR] */
+.hr{
+  height:1px;
+  background:linear-gradient(90deg, transparent 0%, var(--ui-border) 20%, var(--ui-border) 80%, transparent 100%);
+  border:0;
+}
+
+/* =========================================================
+   14) TABLAS (listados)
+   ========================================================= */
+/* [TABLE-WRAP] Contenedor con scroll */
+.table-wrap{
+  background: linear-gradient(180deg, var(--ui-surface) 0%, var(--ui-surface-2) 100%);
+  border:1px solid var(--ui-border);
+  border-radius:var(--ui-radius);
+  overflow:auto;
+  box-shadow:var(--ui-shadow-1);
+  max-width:100%;
+  max-height:62vh;
+  color:var(--ui-text);
+}
+
+/* [TABLE] */
+.table{
+  width:100%;
+  border-collapse:collapse;
+  color:var(--ui-text);
+  font-size:var(--ui-table-font);
+  table-layout:fixed;
+}
+.table th,
+.table td{
+  padding:var(--ui-table-pad-y) var(--ui-table-pad-x);
+  border-bottom:1px solid var(--ui-border);
+  line-height:1.2;
+  vertical-align:middle;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  word-break:break-word;
+}
+.table thead th{
+  text-align:left;
+  background:rgba(255,255,255,0.03);
+  font-weight:700;
+  letter-spacing:.2px;
+}
+.table tr:hover td{ background:rgba(255,255,255,0.025); }
+
+.nowrap{ white-space:nowrap; }
+
+/* [PAGER] paginación */
+.pager{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+  padding:8px;
+}
+.pager .btn{
+  height:30px;
+  padding:0 8px;
+  border-radius:8px;
+}
+
+/* =========================================================
+   15) MODALES
+   ========================================================= */
+/* [MODAL] Overlay */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  place-items:center;
+  padding:20px;
+  z-index:50;
+}
+.modal.is-open{ display:grid; }
+
+/* [MODAL-CARD] Caja del modal */
+.modal .modal-card{
+  width:min(680px,100%);
+  background: linear-gradient(180deg, var(--ui-surface) 0%, var(--ui-surface-2) 100%);
+  border:1px solid var(--ui-border);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:var(--ui-shadow-2);
+  color:var(--ui-text);
+}
+
+/* [MODAL-HEAD] */
+.modal .modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.modal .modal-title{ font-size:18px; font-weight:700; }
+
+/* [MODAL-CLOSE] Botón cerrar */
+.modal .close{
+  background:transparent;
+  border:1px solid var(--ui-border-strong);
+  color:var(--ui-muted);
+  border-radius:10px;
+  width:36px;
+  height:36px;
+  cursor:pointer;
+}
+
+/* =========================================================
+   16) UTILS
+   ========================================================= */
+/* [GRID-2 / GRID-3] */
+.grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:var(--ui-gap); }
+.grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--ui-gap); }
+@media (max-width:859px){ .grid-2,.grid-3{ grid-template-columns:1fr; } }
+
+.hidden{ display:none !important; }
+
+/* [BADGE] */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:3px 6px;
+  border-radius:999px;
+  font-size:12px;
+  background:rgba(255,255,255,0.07);
+  color:var(--ui-text);
+  border:1px solid var(--ui-border);
+}
+
+/* =========================================================
+   17) EXCLUSIÓN EXPLÍCITA DEL FORMULARIO DE VENTAS
+   ========================================================= */
+.venta-form .input,
+.venta-form .select,
+.venta-form .textarea,
+.venta-form .btn,
+.venta-form .form-card,
+.venta-form .table-wrap { all: revert; }
+
+/* =========================================================
+   18) FIX EDITAR: Modo claro SIEMPRE legible
+   - Esto corrige el caso exacto que describís:
+     fondo gris/claro + letras blancas (invisible)
+   - Funciona incluso si tus inputs NO usan .input / .select / .textarea
+   ========================================================= */
+
+/* Base: cuando activás is-light, el texto general debe ser oscuro */
+.is-light,
+.is-light .form-card,
+.form-card.is-light{
+  color: var(--ui-text);
+}
+
+/* Inputs SIN clase (input/select/textarea estándar) */
+.is-light input,
+.is-light select,
+.is-light textarea,
+.form-card.is-light input,
+.form-card.is-light select,
+.form-card.is-light textarea{
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border-color: rgba(15,23,42,0.18) !important;
+}
+
+/* Placeholders en modo claro */
+.is-light input::placeholder,
+.is-light textarea::placeholder,
+.form-card.is-light input::placeholder,
+.form-card.is-light textarea::placeholder{
+  color:#64748b !important;
+}
+
+/* Labels/textos auxiliares (por si vienen en blanco desde otro CSS) */
+.is-light label,
+.is-light .label,
+.is-light .helper,
+.is-light small,
+.is-light span,
+.form-card.is-light label,
+.form-card.is-light .label,
+.form-card.is-light .helper,
+.form-card.is-light small,
+.form-card.is-light span{
+  color:#475569 !important;
+}
+
+/* Si algún contenedor del editar usa fondo gris claro, igual mantenemos contraste */
+.is-light .form-card{
+  background: linear-gradient(180deg, #ffffff 0%, #f3f4f8 100%) !important;
+}
+
+
+
+
+
+
+
+/* =========================================================
+   DIALOG (Editar) — soporte para <dialog>
+   Motivo: tu HTML usa <dialog>, no .modal
+   ========================================================= */
+
+dialog{
+  border: 0;
+  padding: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--ui-shadow-2);
+  background: linear-gradient(180deg, var(--ui-surface) 0%, var(--ui-surface-2) 100%);
+  color: var(--ui-text);
+  width: min(720px, 92vw);
+}
+
+dialog::backdrop{
+  background: rgba(0,0,0,.55);
+}
+
+/* Header / Body / Actions (tus clases reales) */
+.dialog-header{
+  padding: 14px 16px;
+  font-weight: 800;
+  font-size: 18px;
+  border-bottom: 1px solid var(--ui-border);
+  background: rgba(255,255,255,0.02);
+}
+
+.dialog-body{
+  padding: 14px 16px;
+}
+
+.dialog-actions{
+  padding: 12px 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--ui-border);
+  background: rgba(255,255,255,0.02);
+}
+
+/* A prueba de balas: si el dialog queda claro, inputs en oscuro */
+dialog.is-light input,
+dialog.is-light select,
+dialog.is-light textarea{
+  color:#0f172a !important;
+  background:#ffffff !important;
+  border-color: rgba(15,23,42,0.18) !important;
+}

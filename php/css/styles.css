@@ -1,0 +1,100 @@
+/* =========================================================
+   styles.css (general)
+   Nota: este archivo NO debe arruinar el contraste de formularios.
+   Si usás app-forms.css, evitá colores fijos que vuelvan ilegible el texto.
+   ========================================================= */
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+
+  /* Fondo general */
+  background: linear-gradient(to top, #fdbb2d, #2297c3);
+
+  /* ✅ No forzamos un color de texto global (para no romper formularios) */
+  color: inherit;
+
+  min-height: 100vh;
+}
+
+.topbar {
+  z-index: 2;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #2297c3;
+  padding: 30px 20px;
+}
+
+/* [CONTAINER] Contenedor principal */
+.container,
+.container1{
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar-container { margin-top: 97px; }
+
+.sidebar {
+  z-index: 1;
+  position: fixed;
+  top: 10px;
+  left: -80%;
+  width: 80%;
+  max-width: 250px;
+  background-color: rgba(255, 255, 255, 0.9);
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 0px;
+  box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.75);
+  height: 100vh;
+}
+
+.sidebar a {
+  padding: 30px 15px;
+  text-decoration: none;
+  font-size: 16px;
+  color: #2297c3;
+  display: block;
+  transition: 0.3s;
+  border-bottom: 1px solid #333;
+}
+
+.sidebar a:hover { background-color: #333; }
+
+.sidebar i { margin-right: 10px; }
+
+#main {
+  transition: margin-left .5s;
+  padding: 16px;
+  margin-left: 0;
+  width: 100%;
+}
+
+.content-container {
+  margin-left: 40%;
+  width: 70%;
+}
+
+/* [QUICK-BUTTON] Botón rápido / acceso */
+.quick-button {
+  font-size: 48px;
+  color: #333;
+  text-align: center;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  background-color: #fff;
+  box-shadow: 0px 0px 10px 2px rgba(0,0,0,0.1);
+}
+.quick-button:hover { background-color: #eee; }
+
+.title-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
