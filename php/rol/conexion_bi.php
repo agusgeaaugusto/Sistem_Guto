@@ -1,29 +1,23 @@
 <?php
+declare(strict_types=1);
+
+/**
+ * conexion_bi.php — PostgreSQL (Carvallo Bodega)
+ * Nota: En producción, no dejes credenciales hardcodeadas.
+ */
+
 $host = "192.168.0.125";
-$port = "5432"; // Puerto por defecto de PostgreSQL
+$port = "5432";
 $dbname = "sistem";
-$user = "postgres"; // Reemplaza 'tu_usuario' con el nombre de usuario de PostgreSQL
+$user = "postgres";
 $password = "admin";
- // Reemplaza 'tu_contraseña' con la contraseña de PostgreSQL
-$conexion = pg_connect("host=$host port=$port dbname=$dbname user=$user password=$password");
 
-/*if (!$conexion) {
-    die("No se ha podido conectar a la base de datos: " . pg_last_error());
+$conexion = @pg_connect("host={$host} port={$port} dbname={$dbname} user={$user} password={$password}");
+if (!$conexion) {
+  http_response_code(500);
+  die("Sin conexión DB: " . pg_last_error());
 }
-//Puedes descomentar el siguiente código para verificar si la conexión fue exitosa
-if($conexion){
-    echo "Conectado exitosamente a la base de datos";
-} else {
-    echo "No se ha podido conectar a la base de datos";
-}*/
 
-
-
-
-//$conexion = mysqli_connect("localhost", "root","","login_register_db");
-/*if($conexion){
-    echo "conectado exitosamente a ala base de datos";
-}else{
-    echo "No se a podido conectar a la base de datos";
-}*/
+// Asegura formato de fechas consistente si usás DateStyle en server
+@pg_query($conexion, "SET datestyle TO ISO, YMD");
 ?>

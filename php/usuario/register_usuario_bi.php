@@ -43,9 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($nombre === '' || $clave === '' || $id_rol <= 0) {
     jerror('Completa usuario, clave e id_rol');
   }
-
-  // Hash seguro
-  $hash = password_hash($clave, PASSWORD_DEFAULT);
+  // Guardar tal cual (compatibilidad con login que compara texto plano)
+  $hash = $clave;
 
   // Si id_usu no es SERIAL, calculamos el próximo ID
   $nextId = null;

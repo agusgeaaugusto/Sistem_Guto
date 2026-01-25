@@ -148,11 +148,11 @@ $qv = pg_query_params($conexion, 'SELECT * FROM venta WHERE id_venta=$1', [$id_v
 if (!$qv || pg_num_rows($qv) === 0) { http_response_code(404); die('Venta no encontrada'); }
 $venta = pg_fetch_assoc($qv);
 
-// Fecha: preferimos la de la venta, pero aceptamos ts por GET (tu URL trae ts=...)
-$ts_get = isset($_GET['ts']) ? (int)$_GET['ts'] : 0;
-$ts_fecha = $ts_get > 0 ? $ts_get : (isset($venta['fecha_venta']) ? @strtotime($venta['fecha_venta']) : time());
-if (!$ts_fecha) $ts_fecha = time();
+// ✅ Fecha: SIEMPRE del sistema de la PC que imprime (ignoramos BD y ts por URL)
+date_default_timezone_set('America/Asuncion'); // Paraguay
+$ts_fecha  = time();
 $fecha_imp = fecha_py($ts_fecha);
+
 
 // Cliente (compatibles con tu URL)
 $cli_nom = $_GET['razon'] ?? $_GET['cliente_nombre'] ?? ($venta['cliente_nombre'] ?? null) ?? 'CONSUMIDOR FINAL';

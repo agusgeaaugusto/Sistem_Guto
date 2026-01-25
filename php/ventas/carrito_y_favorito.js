@@ -267,18 +267,35 @@
         const btn = document.createElement('button');
         btn.className = 'product-btn';
         btn.type = 'button';
-        btn.title = String(producto.nombre_pro || '');
 
-        const imgFile = producto.imagen_pro ? String(producto.imagen_pro) : '';
-        const imgPath = imgFile ? `../img/productos/${imgFile}` : '../img/productos/sin_imagen.jpg';
+        const nombre = String(producto.nombre_pro || 'PRODUCTO').trim();
+        btn.title = nombre;
 
-        btn.innerHTML = `
-          <img src="${esc(imgPath)}" alt="${esc(producto.nombre_pro)}">
-          <span>${esc(producto.nombre_pro)}</span>
-        `;
+        const imgFile = producto.imagen_pro ? String(producto.imagen_pro).trim() : '';
+        const tieneImagen = imgFile.length > 0;
 
-        const img = btn.querySelector('img');
-        img?.addEventListener('error', () => { img.src = '../img/productos/sin_imagen.jpg'; });
+        // ✅ Render: con imagen o con texto centrado
+        const renderTextoCentrado = () => {
+          btn.classList.add('no-img');
+          btn.innerHTML = `<div class="fav-text">${esc(nombre)}</div>`;
+        };
+
+        if (tieneImagen) {
+          const imgPath = `../img/productos/${imgFile}`;
+
+          btn.innerHTML = `
+            <img src="${esc(imgPath)}" alt="${esc(nombre)}">
+            <span>${esc(nombre)}</span>
+          `;
+
+          // Si la imagen falla -> mostrar nombre completo centrado
+          const img = btn.querySelector('img');
+          img?.addEventListener('error', () => {
+            renderTextoCentrado();
+          });
+        } else {
+          renderTextoCentrado();
+        }
 
         btn.addEventListener("click", () => {
           const cantidad = obtenerCantidadDesdeInput();

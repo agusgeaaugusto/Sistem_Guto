@@ -1,41 +1,23 @@
 <?php
-include 'conexion_bi.php';
+declare(strict_types=1);
+header('Content-Type: application/json; charset=UTF-8');
 
-// Función para validar un ID
-function validarID($id) {
-    return isset($id) && is_numeric($id);
+require_once __DIR__ . '/conexion_bi.php';
+
+function json_out(array $payload, int $code = 200): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
 }
 
-// Función para redirigir a la página principal después de realizar una operación
-function redireccionar() {
-    header("Location: register_rol_bi.php");
-    exit();
+$id = $_GET['eliminar'] ?? null;
+if ($id === null || !ctype_digit((string)$id)) {
+  json_out(['success'=>false,'message'=>'ID de rol no válido'], 400);
 }
 
-// Función para eliminar un rol
-function eliminarRol($id) {
-    global $conexion;
+$sql = "DELETE FROM roles WHERE id_rol = $1";
+$q = pg_query_params($conexion, $sql, [$id]);
+if (!$q) json_out(['success'=>false,'message'=>'Error al eliminar: '.pg_last_error($conexion)], 500);
 
-    // Validar el ID antes de realizar la eliminación
-    if (validarID($id)) {
-        // Corrección: Utilizar marcadores de posición en la consulta SQL
-        $query = "DELETE FROM Roles WHERE id_rol = $1";
-        $result = pg_query_params($conexion, $query, array($id));
-
-        if (!$result) {
-            die("Error en la consulta de eliminación: " . pg_last_error($conexion));
-        }
-
-        redireccionar();
-    } else {
-        // Si hay un error, podrías redirigir también para mantener la consistencia
-        redireccionar();
-    }
-}
-
-// Verificar si se proporciona un ID en la URL para eliminar
-if (isset($_GET['eliminar'])) {
-    $id_rol = $_GET['eliminar'];
-    eliminarRol($id_rol);
-}
+json_out(['success'=>true]);
 ?>

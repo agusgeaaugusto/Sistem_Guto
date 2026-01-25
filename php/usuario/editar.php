@@ -21,7 +21,7 @@ if (!filter_var($id, FILTER_VALIDATE_INT)) jerror('ID inválido');
 if ($nombre === '' || $id_rol <= 0) jerror('Completa usuario e id_rol');
 
 if ($clave !== '') {
-  $hash = password_hash($clave, PASSWORD_DEFAULT);
+  $hash = $clave; // texto plano (compatibilidad)
   $q = "UPDATE public.usuario
         SET nombre_usu=$1, clave_usu=$2, estado_usu=$3, fecha_actualiza_usu=CURRENT_DATE, id_rol=$4
         WHERE id_usu=$5";

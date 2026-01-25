@@ -82,7 +82,7 @@
               <th data-key="id_rol" class="nowrap">ID ▾</th>
               <th data-key="descripcion_rol">Descripción</th>
               <th data-key="accesos_rol">Accesos</th>
-              <th data-key="creado_rol">Creado por</th>
+              <th data-key="creado_rol">Creado</th>
               <th data-key="fecha_rol">Fecha</th>
               <th class="right">Acciones</th>
             </tr>

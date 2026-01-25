@@ -1,28 +1,32 @@
 <?php
-// Suponiendo que tienes una conexión a la base de datos establecida
-include 'conexion_bi.php';
+declare(strict_types=1);
+header('Content-Type: application/json; charset=UTF-8');
 
-// Verificar si se proporciona un ID válido en la solicitud
-if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['id'])) {
-    $id_rol = $_GET['id'];
+require_once __DIR__ . '/conexion_bi.php';
 
-    // Consulta para obtener los detalles del rol
-    $query = "SELECT id_rol, descripcion_rol, accesos_rol, creado_rol, fecha_rol FROM Roles WHERE id_rol = $1";
-    $result = pg_query_params($conexion, $query, array($id_rol));
-
-    if ($result) {
-        // Si se encuentra el rol, devolver los detalles en formato JSON
-        $rol = pg_fetch_assoc($result);
-        header('Content-Type: application/json');
-        echo json_encode($rol);
-    } else {
-        // Si no se encuentra el rol, devolver un mensaje de error
-        http_response_code(404);
-        echo json_encode(array('error' => 'Rol no encontrado'));
-    }
-} else {
-    // Si no se proporciona un ID válido, devolver un mensaje de error
-    http_response_code(400);
-    echo json_encode(array('error' => 'ID de rol no válido'));
+function json_out(array $payload, int $code = 200): void {
+  http_response_code($code);
+  echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+  exit;
 }
+
+$id = $_GET['id'] ?? null;
+if ($id === null || !ctype_digit((string)$id)) {
+  json_out(['success'=>false,'error'=>'ID de rol no válido'], 400);
+}
+
+$sql = "SELECT id_rol, descripcion_rol,
+               accesos_rol::text AS accesos_rol,
+               creado_rol::text  AS creado_rol,
+               fecha_rol::text   AS fecha_rol
+        FROM roles
+        WHERE id_rol = $1";
+$q = pg_query_params($conexion, $sql, [$id]);
+
+if (!$q) json_out(['success'=>false,'error'=>'Error DB: '.pg_last_error($conexion)], 500);
+
+$rol = pg_fetch_assoc($q);
+if (!$rol) json_out(['success'=>false,'error'=>'Rol no encontrado'], 404);
+
+json_out($rol);
 ?>

@@ -163,13 +163,11 @@ $usuario = htmlspecialchars($_SESSION['usuario'], ENT_QUOTES, 'UTF-8');
         <button class="navbtn" data-url="gestion/gestion.php">📑 Gestión de Compra</button>
         <button class="navbtn" data-url="compra/compra.php">🛒 Compra</button>
         <button class="navbtn" data-url="producto/producto.php">📦 Producto</button>
-        <button class="navbtn" data-url="producto_det/producto.php">🧪 Producto tester</button>
         <button class="navbtn" data-url="producto_det/producto_det.php">📦 Producto Detalle</button>
         <button class="navbtn" data-url="moneda/moneda.php">💵 Moneda</button>
         <button class="navbtn" data-url="compra_detalle/compra_detalle.php">📦 Compra Detalle</button>
-        <button class="navbtn" data-url="portaforlio/admin.php">🗂️ Administrador</button>
         <button class="navbtn" data-url="portaforlio/clientes.php">👤 Cliente</button>
-        <button class="navbtn" data-url="acerca.php">📘 Acerca de</button>
+      
       </div>
     </aside>
 

@@ -2,6 +2,9 @@
 declare(strict_types=1);
 header('Content-Type: text/html; charset=UTF-8');
 
+// ✅ IMPORTANTE: traer usuario logueado
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
+
 require_once __DIR__ . '/conexion_bi.php';
 if (!isset($conexion) || !$conexion) { http_response_code(500); die('Sin conexión DB'); }
 
@@ -61,7 +64,10 @@ function getCotizacion($cn, array $venta, string $mon, float $default): float {
       $params = [];
       if ($colCode) {
         $ors = [];
-        foreach ($hints as $h) { $params[] = $h; $ors[] = "UPPER(COALESCE({$colCode}::text,'')) LIKE '%'||$".count($params)."||'%'"; }
+        foreach ($hints as $h) {
+          $params[] = $h;
+          $ors[] = "UPPER(COALESCE({$colCode}::text,'')) LIKE '%'||$".count($params)."||'%'";
+        }
         $where = "(" . implode(" OR ", $ors) . ")";
       }
 
@@ -107,7 +113,12 @@ $cotiz_usd = ($cotiz_usd_get > 0) ? $cotiz_usd_get : getCotizacion($conexion, $v
    ========================= */
 $cli_nom = $_GET['cliente_nombre'] ?? $_GET['razon'] ?? null;
 $cli_doc = $_GET['cliente_doc'] ?? $_GET['ruc'] ?? null;
-$cajero  = $_GET['cajero'] ?? ($venta['cajero'] ?? 'CARVALLO');
+
+// ✅ CAJERO: el usuario que inició sesión
+$cajero = $_SESSION['nombre_usu']
+  ?? $_SESSION['usuario']
+  ?? $_GET['cajero']
+  ?? ($venta['cajero'] ?? 'CARVALLO');
 
 $ventaIdPer = null;
 foreach (['id_per','id_persona','persona_id','idcliente','id_cli'] as $k) {
@@ -139,7 +150,9 @@ if (!$cli_doc) $cli_doc = '';
    TICKET (si existe)
    ========================= */
 $ticketq = pg_query_params($conexion, 'SELECT numero, fecha FROM ticket WHERE id_venta=$1', [$id_venta]);
-$tk = ($ticketq && pg_num_rows($ticketq) > 0) ? pg_fetch_assoc($ticketq) : ['numero'=>null,'fecha'=>date('Y-m-d H:i:s')];
+$tk = ($ticketq && pg_num_rows($ticketq) > 0)
+  ? pg_fetch_assoc($ticketq)
+  : ['numero'=>null,'fecha'=>date('Y-m-d H:i:s')];
 
 /* =========================
    DETALLE
@@ -181,8 +194,21 @@ $recibido_txt = $_GET['recibido_txt'] ?? null;
 $recibido_gs  = isset($venta['recibido']) ? (float)$venta['recibido'] : (isset($_GET['recibido']) ? (float)$_GET['recibido'] : 0);
 $vuelto_gs    = isset($venta['vuelto'])   ? (float)$venta['vuelto']   : (isset($_GET['vuelto'])   ? (float)$_GET['vuelto']   : 0);
 
-$fecha = $tk['fecha'] ?? date('Y-m-d H:i:s');
-$fecha_fmt = date('d/m/Y H:i', strtotime((string)$fecha));
+$fecha = $tk['fecha'] ?? null;
+
+try {
+  if (!empty($fecha)) {
+    // Postgres viene en UTC (si tu campo es timestamp sin zona y vos lo guardás en UTC)
+    $dt = new DateTime((string)$fecha, new DateTimeZone('UTC'));
+    $dt->setTimezone(new DateTimeZone('America/Asuncion'));
+  } else {
+    $dt = new DateTime('now', new DateTimeZone('America/Asuncion'));
+  }
+} catch (Exception $e) {
+  $dt = new DateTime('now', new DateTimeZone('America/Asuncion'));
+}
+
+$fecha_fmt = $dt->format('d/m/Y H:i');
 
 // Teléfono del local
 $tel_local = '0981 742 163';
@@ -203,8 +229,6 @@ $tel_local = '0981 742 163';
     font-family: "Courier New", ui-monospace, monospace;
     color:#000;
     background:#fff;
-
-    /* Más negro/contraste (térmica) */
     font-weight: 700;
     -webkit-font-smoothing: none;
     text-rendering: geometricPrecision;
@@ -220,7 +244,6 @@ $tel_local = '0981 742 163';
   .r{ text-align:right; }
   .l{ text-align:left; }
 
-  /* Fuente un poco más grande en general */
   .title{ font-weight: 900; font-size: 16px; letter-spacing: .5px; }
   .meta{ font-size: 12px; line-height: 1.25; }
   .muted{ opacity:.85; }
@@ -260,7 +283,6 @@ $tel_local = '0981 742 163';
 
     <div class="line"></div>
 
-    <!-- CENTRADO: Venta / Cajero / Cliente -->
     <div class="c meta">
       <div><strong>Venta:</strong> <?= h($venta['id_venta'] ?? $id_venta) ?></div>
       <div><strong>Cajero:</strong> <?= h($cajero) ?></div>
