@@ -1,7 +1,7 @@
 <?php
 include 'conexion_bi.php';
 
-$query = "SELECT id_com, fecha_com FROM Compra ORDER BY id_com ASC";
+$query = "SELECT id_com, fecha_com FROM Compra ORDER BY id_com DESC";
 $result = pg_query($conexion, $query);
 
 $compras = array();

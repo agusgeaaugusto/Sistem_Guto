@@ -1,17 +1,33 @@
 <?php
-include 'conexion_bi.php';
-header('Content-Type: application/json');
+require_once 'conexion_bi.php';
+header('Content-Type: application/json; charset=UTF-8');
 
-$query = "SELECT nombre_mon, tasa_cambio FROM moneda";
+// Obtener SOLO la cotización ACTIVA (la más reciente)
+$query = "
+  SELECT guarani, real, dolar
+  FROM moneda
+  WHERE estado = 'ACTIVO'
+  ORDER BY creado_en DESC, id_mon DESC
+  LIMIT 1
+";
+
 $result = pg_query($conexion, $query);
 
-$respuesta = [];
+if ($result && pg_num_rows($result) > 0) {
+    $row = pg_fetch_assoc($result);
 
-while ($row = pg_fetch_assoc($result)) {
-    $nombre = strtolower($row['nombre_mon']);
-    $respuesta[$nombre] = floatval($row['tasa_cambio']);
+    $respuesta = [
+        'guarani' => 1000, // 🔥 BASE REAL: 1000 Gs
+        'real'    => floatval($row['real']),
+        'dolar'   => floatval($row['dolar'])
+    ];
+
+    echo json_encode($respuesta);
+} else {
+    http_response_code(404);
+    echo json_encode([
+        'error' => 'No existe cotización ACTIVA'
+    ]);
 }
 
-echo json_encode($respuesta);
 pg_close($conexion);
-?>

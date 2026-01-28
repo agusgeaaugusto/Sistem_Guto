@@ -5,18 +5,9 @@
   <title>Proveedores</title>
 
   <!-- 🔗 Theme unificado -->
-<link rel="stylesheet" href="../css/app-forms.css?v=20260103-1">
+<link rel="stylesheet" href="../css/app-forms.css?v=20260127-std">
 
   <!-- Layout mínimo -->
-  <style>
-    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;display:flex;align-items:flex-start;justify-content:center;padding:24px}
-    .app{width:min(1200px,100%);display:grid;gap:18px}
-    .header{display:flex;align-items:center;justify-content:space-between}
-    .title{font-weight:800;font-size:clamp(18px,2.2vw,26px)}
-    .grid{display:grid;grid-template-columns:420px 1fr;gap:18px}
-    @media (max-width: 960px){.grid{grid-template-columns:1fr}}
-    .right{text-align:right}.nowrap{white-space:nowrap}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-  </style>
 </head>
 <body>
 <div class="app" role="application" aria-label="Gestión de Proveedores">
@@ -44,11 +35,12 @@
           <label class="label" for="telefono_prove">Teléfono</label>
           <input class="input" id="telefono_prove" name="telefono_prove" inputmode="numeric" required>
         </div>
-        <div class="form-actions">
+   
+      </form>
+           <div class="form-actions">
           <button class="btn" type="submit">Guardar</button>
           <button class="btn ghost" type="reset">Limpiar</button>
         </div>
-      </form>
     </div>
 
     <!-- Listado -->

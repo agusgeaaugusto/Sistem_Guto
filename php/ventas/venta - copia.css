@@ -564,7 +564,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 4px 0 rgba(206, 15, 15, 0.2);
+  box-shadow:0 4px 0 rgba(0,0,0,.20);
   transition:background-color .10s, box-shadow .10s, opacity .10s;
 }
 .btn-cuadrado:active{
@@ -631,7 +631,7 @@ body{
 /* =========================
    MODAL PRODUCTOS
    ========================= */
-.modal{
+#modal-productos.modal{
   position:fixed;
   inset:0;
   z-index:9999;
@@ -640,7 +640,7 @@ body{
   justify-content:center;
   background:rgba(0,0,0,.65);
 }
-.modal.hidden{ display:none !important; }
+#modal-productos.modal.hidden{ display:none !important; }
 
 .modal-content{
   width:min(600px, 92vw);
@@ -902,4 +902,131 @@ body.resizing{
 
 
 
+/* =========================================================
+   MODAL — Registrar Persona (POS / Carvallo)
+========================================================= */
 
+/* Contenedor general */
+#modal-persona.modal{
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: none;               /* se activa con .open */
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal activo */
+#modal-persona.modal.open{
+  display: flex;
+}
+
+/* Fondo oscuro */
+#modal-persona .modal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+}
+
+/* Caja del modal */
+#modal-persona .modal-box{
+  position: relative;
+  z-index: 1;
+  width: min(420px, 92vw);
+  background: linear-gradient(180deg,var(--surface) 0%,var(--surface2) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 40px rgba(11,15,25,.35);
+  overflow: hidden;
+  animation: modalIn .18s ease-out;
+}
+
+/* Animación */
+@keyframes modalIn{
+  from{ transform: translateY(10px) scale(.98); opacity:0 }
+  to{ transform: none; opacity:1 }
+}
+
+/* Cabecera */
+#modal-persona .modal-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(250,204,21,.25) 0%,
+    rgba(255,247,230,.98) 100%
+  );
+  border-bottom: 1px solid rgba(11,15,25,.10);
+}
+
+#modal-persona #modal-persona .modal-head h3{
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+/* Cuerpo */
+#modal-persona .modal-body{
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Inputs del modal */
+#modal-persona #modal-persona .modal-body label{
+  font-size: var(--label);
+  font-weight: 900;
+}
+
+#modal-persona #modal-persona .modal-body input{
+  height: var(--h);
+  padding: 5px 8px;
+  font-size: var(--font);
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+}
+
+#modal-persona #modal-persona .modal-body input:focus{
+  border-color: rgba(250,204,21,.98);
+  box-shadow: 0 0 0 3px rgba(250,204,21,.20);
+  background: rgba(250,204,21,.06);
+}
+
+/* Pie */
+#modal-persona .modal-foot{
+  padding: 12px 14px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  border-top: 1px solid rgba(11,15,25,.10);
+  background: #fff;
+}
+
+/* Botón cancelar outline */
+.btn.danger-outline{
+  background: transparent;
+  border: 1px solid rgba(225,29,72,.6);
+  color: var(--red);
+}
+.btn.danger-outline:hover{
+  background: rgba(225,29,72,.08);
+}
+
+/* Mobile */
+@media (max-width:480px){
+  #modal-persona .modal-foot{
+    flex-direction: column;
+  }
+  #modal-persona .modal-foot .btn{
+    width: 100%;
+  }
+}
+
+
+
+/* Bloquear scroll cuando un modal está abierto */
+body.modal-open{ overflow:hidden; }

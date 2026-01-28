@@ -8,7 +8,7 @@
   <title>Carvallo Bodega - Pantalla de Ventas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="venta.css?v=20260103-1">
-  <link rel="stylesheet" href="../css/app-forms1.css?v=20260103-1">
+  <link rel="stylesheet" href="../css/app-forms.css?v=20260103-1">
 </head>
 
 <body class="modern-ui shell-embed">
@@ -296,9 +296,6 @@
   <script src="cliente.js"></script>
   <script src="productos-modal.js?v=20260103-2"></script>
   <script src="venta_flow.js?v=20251028-7"></script>
- <!-- QZ Tray (OBLIGATORIO) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qz-tray/2.2.5/qz-tray.min.js"></script>
-<script src="qz-print.js"></script>
 <script src="impresion.js"></script>
 
 
@@ -437,6 +434,64 @@
 })();
 </script>
 
+
+
+<script>
+/* =========================================================
+   MODAL PERSONA (cuando no existe el cliente)
+   - abrirModalPersona(rucOpcional)
+   - cerrarModalPersona()
+   ========================================================= */
+(function(){
+  const modal = document.getElementById('modal-persona');
+  if(!modal) return;
+
+  const rucEl = document.getElementById('mp-ruc');
+  const nomEl = document.getElementById('mp-nombre');
+
+  let lastFocus = null;
+
+  window.abrirModalPersona = function(ruc=''){
+    lastFocus = document.activeElement;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('modal-open');
+
+    if(rucEl && ruc){
+      rucEl.value = String(ruc).trim();
+    }
+
+    // foco: si ya hay ruc, saltar al nombre
+    setTimeout(() => {
+      if(!rucEl || !nomEl) return;
+      (rucEl.value ? nomEl : rucEl).focus();
+      (rucEl.value ? nomEl : rucEl).select?.();
+    }, 0);
+  };
+
+  window.cerrarModalPersona = function(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('modal-open');
+
+    const fallback = document.getElementById('cliente-ruc');
+    setTimeout(() => (lastFocus || fallback)?.focus(), 0);
+  };
+
+  // cerrar por backdrop / botones con data-close
+  modal.addEventListener('click', (e) => {
+    const closeHit = e.target.closest?.('[data-close]');
+    if(closeHit) window.cerrarModalPersona();
+  });
+
+  // ESC
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && modal.classList.contains('open')){
+      window.cerrarModalPersona();
+    }
+  });
+})();
+</script>
 
 </body>
 </html>

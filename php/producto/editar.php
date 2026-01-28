@@ -10,7 +10,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $uni_caja_pro      = isset($_POST['uni_caja_pro']) ? (int)$_POST['uni_caja_pro'] : 0;
     $iva_pro           = isset($_POST['iva_pro']) ? (float)$_POST['iva_pro'] : 0;
     $id_cat            = isset($_POST['id_cat']) ? (int)$_POST['id_cat'] : 0;
-    $favorito          = isset($_POST['favorito']) && $_POST['favorito'] === '1';
+    $favorito_raw = strtolower(trim((string)($_POST['favorito'] ?? '0')));
+    $favorito = in_array($favorito_raw, ['1','true','on','yes'], true);
     $imagen_nueva      = '';
     $directorioImagenes = '../img/productos/';
 

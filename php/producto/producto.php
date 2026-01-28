@@ -6,24 +6,9 @@
   <title>Productos</title>
 
   <!-- 🔗 Theme global -->
-<link rel="stylesheet" href="../css/app-forms.css?v=20260103-1">
+<link rel="stylesheet" href="../css/app-forms.css?v=20260127-2">
 
   <!-- Layout mínimo -->
-  <style>
-    body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      display:flex; align-items:flex-start; justify-content:center;
-      padding:24px;
-    }
-    .app{ width:min(1200px,100%); display:grid; gap:18px }
-    .header{ display:flex; align-items:center; justify-content:space-between }
-    .title{ font-weight:800; font-size: clamp(18px, 2.2vw, 26px) }
-    .grid{ display:grid; grid-template-columns: 440px 1fr; gap:18px }
-    @media (max-width: 1024px){ .grid{ grid-template-columns: 1fr } }
-    .img-cell img{ height:42px; width:auto; border-radius:8px; object-fit:cover; border:1px solid var(--border) }
-    .star{ font-size:18px; line-height:1 }
-  </style>
 </head>
 <body>
 <div class="app" role="application" aria-label="Productos">
@@ -75,11 +60,12 @@
           </label>
         </div>
 
-        <div class="form-actions">
+     
+      </form>
+         <div class="form-actions">
           <button class="btn" type="submit">Agregar</button>
           <button class="btn ghost" type="reset">Limpiar</button>
         </div>
-      </form>
     </div>
 
     <!-- Panel derecho: listado -->
@@ -372,6 +358,8 @@ document.getElementById('saveE').onclick = async ()=>{
   fd.set('favorito', document.getElementById('edit_favorito').checked ? '1' : '0');
 
   if(!(fd.get('nombre_pro')||'').trim()){ toast('Falta el nombre','','error'); return; }
+
+  fd.set('favorito', document.getElementById('edit_favorito').checked ? '1' : '0');
 
   const r = await fetch(API_EDIT,{method:'POST', body: fd});
   const j = await safeJson(r);

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'php/cargos/conexion_bi.php';
+require_once 'conexion_bi.php';
 
 $error = '';
 

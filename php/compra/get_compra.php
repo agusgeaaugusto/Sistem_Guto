@@ -1,27 +1,27 @@
 <?php
-include 'conexion_bi.php';
+declare(strict_types=1);
+header('Content-Type: application/json; charset=UTF-8');
 
-// Verificar si se proporciona un ID válido en la solicitud
-if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['id'])) {
-    $id_com = $_GET['id'];
+require_once __DIR__ . '/conexion_bi.php';
+if (!isset($conexion) || !$conexion) { http_response_code(500); echo json_encode(['success'=>false,'message'=>'Sin conexión DB']); exit; }
 
-    // Consulta para obtener los detalles de la compra
-    $query = "SELECT id_com, id_proveedor FROM Compra WHERE id_com = $1";
-    $result = pg_query_params($conexion, $query, array($id_com));
-
-    if ($result) {
-        // Si se encuentra la compra, devolver los detalles en formato JSON
-        $compra = pg_fetch_assoc($result);
-        header('Content-Type: application/json');
-        echo json_encode($compra);
-    } else {
-        // Si no se encuentra la compra, devolver un mensaje de error
-        http_response_code(404);
-        echo json_encode(array('error' => 'Compra no encontrada'));
-    }
-} else {
-    // Si no se proporciona un ID válido, devolver un mensaje de error
-    http_response_code(400);
-    echo json_encode(array('error' => 'ID de compra no válido'));
+$id = $_GET['id'] ?? null;
+if ($id === null || $id === '' || !is_numeric($id)) {
+  http_response_code(422);
+  echo json_encode(['success'=>false,'message'=>'ID inválido']);
+  exit;
 }
-?>
+
+$r = pg_query_params($conexion, "SELECT * FROM compra WHERE id_com=$1 LIMIT 1", [(int)$id]);
+if(!$r){
+  http_response_code(500);
+  echo json_encode(['success'=>false,'message'=>'Error DB: '.pg_last_error($conexion)]);
+  exit;
+}
+$row = pg_fetch_assoc($r);
+if(!$row){
+  http_response_code(404);
+  echo json_encode(['success'=>false,'message'=>'Compra no encontrada']);
+  exit;
+}
+echo json_encode(['success'=>true,'compra'=>$row], JSON_UNESCAPED_UNICODE);

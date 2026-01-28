@@ -1,29 +1,32 @@
 <?php
-include 'conexion_bi.php';
+declare(strict_types=1);
+header('Content-Type: application/json; charset=UTF-8');
 
-function validarID($id) {
-    return isset($id) && is_numeric($id);
-}
+require_once __DIR__ . '/conexion_bi.php';
+if (!isset($conexion) || !$conexion) { http_response_code(500); echo json_encode(['success'=>false,'message'=>'Sin conexión DB']); exit; }
 
-function eliminarMoneda($id) {
-    global $conexion;
-
-    if (validarID($id)) {
-        $query = "DELETE FROM Moneda WHERE id_mon = $1";
-        $result = pg_query_params($conexion, $query, array($id));
-
-        if (!$result) {
-            die("Error en la consulta de eliminación: " . pg_last_error());
-        }
-
-        echo json_encode(array('success' => true));
-    } else {
-        echo json_encode(array('success' => false, 'message' => 'ID de moneda no válido.'));
-    }
-}
+function validarID($id): bool { return isset($id) && is_numeric($id) && intval($id) > 0; }
 
 if (isset($_GET['eliminar'])) {
-    $id_mon = $_GET['eliminar'];
-    eliminarMoneda($id_mon);
+  $id_mon = $_GET['eliminar'];
+
+  if (!validarID($id_mon)) {
+    echo json_encode(['success'=>false,'message'=>'ID de moneda no válido.']); exit;
+  }
+
+  $q = "DELETE FROM moneda WHERE id_mon = $1";
+  $r = pg_query_params($conexion, $q, [$id_mon]);
+
+  if (!$r) {
+    http_response_code(400);
+    echo json_encode(['success'=>false,'message'=>'Error DB: '.pg_last_error($conexion)]);
+    exit;
+  }
+
+  echo json_encode(['success'=>true]);
+  pg_close($conexion);
+  exit;
 }
-?>
+
+echo json_encode(['success'=>false,'message'=>'Parámetro eliminar faltante.']);
+pg_close($conexion);

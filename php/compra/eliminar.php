@@ -1,40 +1,30 @@
 <?php
-include 'conexion_bi.php';
+declare(strict_types=1);
+header('Content-Type: application/json; charset=UTF-8');
 
-// Función para validar un ID
-function validarID($id) {
-    return isset($id) && is_numeric($id);
+require_once __DIR__ . '/conexion_bi.php';
+if (!isset($conexion) || !$conexion) { http_response_code(500); echo json_encode(['success'=>false,'message'=>'Sin conexión DB']); exit; }
+
+function jsonOut($arr, int $code=200): void {
+  http_response_code($code);
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+  exit;
 }
 
-// Función para redirigir a la página principal después de realizar una operación
-function redireccionar() {
-    header("Location: register_compra_bi.php");
-    exit();
+function validarID($id): bool { return isset($id) && is_numeric($id) && intval($id) > 0; }
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  jsonOut(['success'=>false,'message'=>'Método no permitido.'], 405);
 }
 
-// Función para eliminar una compra
-function eliminarCompra($id) {
-    global $conexion;
-
-    // Validar el ID antes de realizar la eliminación
-    if (validarID($id)) {
-        // Utilizar consultas preparadas para evitar inyecciones SQL
-        $query = "DELETE FROM Compra WHERE id_com = $1";
-        $result = pg_query_params($conexion, $query, array($id));
-
-        if (!$result) {
-            die("Error en la consulta de eliminación: " . pg_last_error());
-        }
-
-        redireccionar();
-    } else {
-        redireccionar();
-    }
+$id_com = $_POST['id_com'] ?? null;
+if (!validarID($id_com)) {
+  jsonOut(['success'=>false,'message'=>'ID de compra no válido.'], 422);
 }
 
-// Verificar si se proporciona un ID en la URL para eliminar
-if (isset($_GET['eliminar'])) {
-    $id_com = $_GET['eliminar'];
-    eliminarCompra($id_com);
+$r = pg_query_params($conexion, "DELETE FROM compra WHERE id_com=$1", [(int)$id_com]);
+if(!$r){
+  jsonOut(['success'=>false,'message'=>'Error DB: '.pg_last_error($conexion)], 500);
 }
-?>
+
+jsonOut(['success'=>true]);

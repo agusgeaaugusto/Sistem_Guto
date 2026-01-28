@@ -9,38 +9,36 @@
   <link rel="stylesheet" href="../css/app-forms.css">
 
   <!-- Layout mínimo -->
-  <style>
-    body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      display:flex; align-items:flex-start; justify-content:center;
-      padding:24px;
-    }
-    .app{ width:min(1100px,100%); display:grid; gap:18px }
-    .header{ display:flex; align-items:center; justify-content:space-between }
-    .title{ font-weight:800; font-size: clamp(18px, 2.2vw, 26px) }
-    .grid{ display:grid; grid-template-columns: 420px 1fr; gap:18px }
-    @media (max-width: 920px){ .grid{ grid-template-columns: 1fr } }
-  </style>
 </head>
 <body>
 <div class="app" role="application" aria-label="Monedas">
-  <div class="header"><div class="title">Lista de Monedas</div></div>
+  <div class="header"><div class="title">Cotización de Monedas</div></div>
 
   <div class="grid">
     <!-- Panel izquierdo: formulario -->
     <div class="form-card">
-      <h2 class="form-title">Agregar Moneda</h2>
+      <h2 class="form-title">Agregar Cotización</h2>
       <form id="formAdd" class="app-form" autocomplete="off" novalidate>
         <div class="field">
-          <label class="label" for="nombre_mon">Nombre</label>
-          <input class="input" id="nombre_mon" name="nombre_mon" required placeholder="Ej: Guaraní">
+          <label class="label" for="guarani">Guaraní (base)</label>
+          <input class="input" id="guarani" name="guarani" type="number" step="0.0001" value="1.0000" readonly>
         </div>
         <div class="field">
-          <label class="label" for="tasa_cambio">Tasa de Cambio</label>
-          <input class="input" id="tasa_cambio" name="tasa_cambio" type="number" step="0.0001" required placeholder="Ej: 7300.00">
+          <label class="label" for="real">Real (BRL)</label>
+          <input class="input" id="real" name="real" type="number" step="0.0001" required placeholder="Ej: 1400.0000">
         </div>
-        <div class="form-actions">
+        <div class="field">
+          <label class="label" for="dolar">Dólar (USD)</label>
+          <input class="input" id="dolar" name="dolar" type="number" step="0.0001" required placeholder="Ej: 7300.0000">
+        </div>
+        <div class="field">
+          <label class="label" for="estado">Estado</label>
+          <select class="select" id="estado" name="estado" required>
+            <option value="ACTIVO" selected>ACTIVO</option>
+            <option value="INACTIVO">INACTIVO</option>
+          </select>
+        </div>
+<div class="form-actions">
           <button class="btn" type="submit">Agregar</button>
           <button class="btn ghost" type="reset">Limpiar</button>
         </div>
@@ -80,8 +78,11 @@
           <thead>
             <tr>
               <th data-key="id_mon" class="nowrap">ID ▾</th>
-              <th data-key="nombre_mon">Nombre</th>
-              <th data-key="tasa_cambio" class="right">Tasa de Cambio</th>
+              <th data-key="guarani" class="right">Guaraní</th>
+              <th data-key="real" class="right">Real</th>
+              <th data-key="dolar" class="right">Dólar</th>
+              <th data-key="estado">Estado</th>
+              <th data-key="fecha_inicio" class="nowrap">Inicio</th>
               <th class="right">Acciones</th>
             </tr>
           </thead>
@@ -103,31 +104,45 @@
 
 <!-- Modal Editar -->
 <dialog id="dlgEdit">
-  <div class="dialog-header">Editar Moneda</div>
+  <div class="dialog-header">Editar Cotización</div>
   <div class="dialog-body">
     <form id="formEdit" class="app-form" novalidate>
       <input type="hidden" id="edit_id" name="id_mon">
+      
       <div class="field">
-        <label class="label" for="edit_nombre">Nombre</label>
-        <input class="input" id="edit_nombre" name="nombre_mon" required>
+        <label class="label" for="edit_guarani">Guaraní (base)</label>
+        <input class="input" id="edit_guarani" name="guarani" type="number" step="0.0001" value="1.0000" readonly>
       </div>
       <div class="field">
-        <label class="label" for="edit_tasa">Tasa de Cambio</label>
-        <input class="input" id="edit_tasa" name="tasa_cambio" type="number" step="0.0001" required>
+        <label class="label" for="edit_real">Real (BRL)</label>
+        <input class="input" id="edit_real" name="real" type="number" step="0.0001" required>
       </div>
+      <div class="field">
+        <label class="label" for="edit_dolar">Dólar (USD)</label>
+        <input class="input" id="edit_dolar" name="dolar" type="number" step="0.0001" required>
+      </div>
+      <div class="field">
+        <label class="label" for="edit_estado">Estado</label>
+        <select class="select" id="edit_estado" name="estado" required>
+          <option value="ACTIVO">ACTIVO</option>
+          <option value="INACTIVO">INACTIVO</option>
+        </select>
+      </div>
+
     </form>
-  </div>
-  <div class="dialog-actions">
+     <div class="dialog-actions">
     <button class="btn ghost" id="cancelE" type="button">Cancelar</button>
     <button class="btn" id="saveE" type="button">Guardar</button>
   </div>
+  </div>
+ 
 </dialog>
 
 <script>
 // Endpoints
-const API_LIST = 'register_moneda_bi.php'; // GET -> array [{id_mon, nombre_mon, tasa_cambio}]
-const API_ADD  = 'register_moneda_bi.php'; // POST -> nombre_mon, tasa_cambio
-const API_EDIT = 'editar.php';             // POST -> id_mon, nombre_mon, tasa_cambio
+const API_LIST = 'register_moneda_bi.php'; // GET -> array [{id_mon, guarani, real, dolar, estado, fecha_inicio}]
+const API_ADD  = 'register_moneda_bi.php'; // POST -> real, dolar, estado (guarani base)
+const API_EDIT = 'editar.php';             // POST -> id_mon, real, dolar, estado
 const API_DEL  = 'eliminar.php?eliminar='; // GET  -> ?eliminar=ID
 
 // DOM
@@ -143,7 +158,7 @@ const formE = document.getElementById('formEdit');
 
 let data = [];
 let page = 1;
-let key  = 'id_mon';
+let key  = 'estado';
 let asc  = true;
 
 // UI helpers
@@ -156,6 +171,16 @@ const toast=(t,m='',type='success')=>{
 };
 const safeJson=async r=>{try{return await r.json()}catch{return null}};
 const cmp=(a,b,k)=>{
+  // Prioridad: ACTIVO primero cuando se ordena por "estado"
+  if(k==='estado'){
+    const ra = ((a.estado||'').toString().toUpperCase()==='ACTIVO') ? 0 : 1;
+    const rb = ((b.estado||'').toString().toUpperCase()==='ACTIVO') ? 0 : 1;
+    if(ra!==rb) return ra-rb;
+    // desempate: más nuevo primero por id
+    const ia = +a.id_mon||0, ib = +b.id_mon||0;
+    return ib-ia;
+  }
+
   const A=(a[k]??'').toString().toLowerCase(), B=(b[k]??'').toString().toLowerCase();
   if(!isNaN(+a[k]) && !isNaN(+b[k])) return +a[k]-+b[k];
   return A.localeCompare(B,'es',{numeric:true,sensitivity:'base'});
@@ -163,19 +188,31 @@ const cmp=(a,b,k)=>{
 const setLoad=()=>{tbody.innerHTML=Array.from({length:6}).map(()=>`
   <tr>
     <td><div class="skeleton"></div></td>
+    <td class="right"><div class="skeleton" style="width:55%; margin-left:auto"></div></td>
+    <td class="right"><div class="skeleton" style="width:55%; margin-left:auto"></div></td>
+    <td class="right"><div class="skeleton" style="width:55%; margin-left:auto"></div></td>
     <td><div class="skeleton" style="width:60%"></div></td>
+    <td><div class="skeleton" style="width:65%"></div></td>
     <td class="right"><div class="skeleton" style="width:40%; margin-left:auto"></div></td>
-    <td class="right"><div class="skeleton" style="width:30%; margin-left:auto"></div></td>
   </tr>`).join('')};
 
 const filt=()=>{
   const q=(buscar.value||'').toLowerCase().trim();
   if(!q) return data.slice();
   return data.filter(x=>{
-    const t = `${x.id_mon||''} ${x.nombre_mon||''} ${x.tasa_cambio||''}`.toLowerCase();
+    const t = `${x.id_mon||''} ${x.estado||''} ${x.real||''} ${x.dolar||''} ${x.fecha_inicio||''}`.toLowerCase();
     return t.includes(q);
   });
 };
+
+
+function applySortArrow(){
+  document.querySelectorAll('thead th[data-key]').forEach(t=>{
+    const k=t.getAttribute('data-key');
+    t.textContent = t.textContent.replace(/[▴▾]/g,'').trim();
+    if(k===key) t.textContent += ' ' + (asc?'▴':'▾');
+  });
+}
 
 function render(){
   const rows=filt().sort((a,b)=>asc?cmp(a,b,key):cmp(b,a,key));
@@ -186,14 +223,17 @@ function render(){
   tbody.innerHTML = sl.length ? sl.map(r=>`
     <tr class="data">
       <td class="mono nowrap">#${r.id_mon??''}</td>
-      <td><span class="badge">${(r.nombre_mon??'').replace(/</g,'&lt;')}</span></td>
-      <td class="right">${r.tasa_cambio??''}</td>
+      <td class="right">${r.guarani??''}</td>
+      <td class="right">${r.real??''}</td>
+      <td class="right">${r.dolar??''}</td>
+      <td><span class="badge">${(r.estado??'').replace(/</g,'&lt;')}</span></td>
+      <td class="mono nowrap">${(r.fecha_inicio??'').toString().slice(0,16).replace('T',' ')}</td>
       <td class="right nowrap">
         <button class="btn ghost" onclick="openEdit(${Number(r.id_mon)})">Editar</button>
         <button class="btn danger" onclick="delRow(${Number(r.id_mon)})">Eliminar</button>
       </td>
     </tr>`).join('')
-  : `<tr><td colspan="4"><div class="empty">Sin resultados</div></td></tr>`;
+  : `<tr><td colspan="7"><div class="empty">Sin resultados</div></td></tr>`;
 
   info.textContent = `Página ${page}/${max}`;
   prev.disabled = page<=1;
@@ -205,6 +245,7 @@ async function load(){
   const r = await fetch(API_LIST, {cache:'no-store'});
   const j = await safeJson(r);
   data = Array.isArray(j) ? j : (j && Array.isArray(j.data) ? j.data : []);
+  applySortArrow();
   render();
 }
 
@@ -230,17 +271,23 @@ next.onclick     = ()=>{ page++; render(); };
 document.getElementById('formAdd').addEventListener('submit', async e=>{
   e.preventDefault();
   const fd=new FormData(e.target);
-  const n =(fd.get('nombre_mon')||'').trim();
-  const tc= (fd.get('tasa_cambio')||'').trim();
-  if(n.length<1 || !tc){ toast('Completa los campos','', 'error'); return; }
+
+  const real  = (fd.get('real')||'').trim();
+  const dolar = (fd.get('dolar')||'').trim();
+  const estado= (fd.get('estado')||'ACTIVO').trim();
+
+  if(!real || !dolar){ toast('Completa Real y Dólar','', 'error'); return; }
 
   const r = await fetch(API_ADD,{method:'POST', body: fd});
   const j = await safeJson(r);
   if(j && j.success===false){
     toast('No se pudo guardar', j.message||'', 'error');
   }else{
-    toast('Moneda guardada');
+    toast('Cotización guardada');
     e.target.reset();
+    // mantener valores por defecto
+    const g = document.getElementById('guarani'); if(g) g.value = '1.0000';
+    const es= document.getElementById('estado');  if(es) es.value = 'ACTIVO';
     load();
   }
 });
@@ -249,9 +296,13 @@ document.getElementById('formAdd').addEventListener('submit', async e=>{
 window.openEdit = id=>{
   const it = data.find(x=>+x.id_mon===+id);
   if(!it){ toast('No encontrado','', 'error'); return; }
-  formE.edit_id.value    = it.id_mon;
-  formE.edit_nombre.value= it.nombre_mon || '';
-  formE.edit_tasa.value  = it.tasa_cambio || '';
+
+  formE.edit_id.value      = it.id_mon;
+  formE.edit_guarani.value = it.guarani ?? '1.0000';
+  formE.edit_real.value    = it.real ?? '';
+  formE.edit_dolar.value   = it.dolar ?? '';
+  formE.edit_estado.value  = it.estado ?? 'ACTIVO';
+
   dlg.showModal();
 };
 document.getElementById('cancelE').onclick = ()=> dlg.close();
@@ -259,16 +310,17 @@ document.getElementById('cancelE').onclick = ()=> dlg.close();
 // Save edit
 document.getElementById('saveE').onclick = async ()=>{
   const fd = new FormData(formE);
-  const n  = (fd.get('nombre_mon')||'').trim();
-  const tc = (fd.get('tasa_cambio')||'').trim();
-  if(n.length<1 || !tc){ toast('Completa los campos','', 'error'); return; }
+
+  const real  = (fd.get('real')||'').trim();
+  const dolar = (fd.get('dolar')||'').trim();
+  if(!real || !dolar){ toast('Completa Real y Dólar','', 'error'); return; }
 
   const r = await fetch(API_EDIT,{method:'POST', body: fd});
   const j = await safeJson(r);
   if(j && j.success===false){
     toast('No se pudo editar', j.message||'', 'error');
   }else{
-    toast('Moneda actualizada');
+    toast('Cotización actualizada');
     dlg.close();
     load();
   }

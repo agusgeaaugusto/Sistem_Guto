@@ -13,22 +13,9 @@
   <title>Compras</title>
 
   <!-- 🔗 Theme global (ajusta la ruta si cambia la carpeta) -->
- <link rel="stylesheet" href="../css/app-forms.css?v=20260103-1">
+ <link rel="stylesheet" href="../css/app-forms.css?v=20260127-std">
 
   <!-- Solo layout mínimo de página -->
-  <style>
-    body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      display:flex; align-items:flex-start; justify-content:center;
-      padding:24px;
-    }
-    .app{ width:min(1200px,100%); display:grid; gap:18px }
-    .header{ display:flex; align-items:center; justify-content:space-between }
-    .title{ font-weight:800; font-size: clamp(18px, 2.2vw, 26px) }
-    .grid{ display:grid; grid-template-columns: 480px 1fr; gap:18px }
-    @media (max-width: 1024px){ .grid{ grid-template-columns: 1fr } }
-  </style>
 </head>
 <body>
 <div class="app">
@@ -45,15 +32,24 @@
           <input class="input" type="date" name="fecha_com" required>
         </div>
         <div class="field">
-          <label class="label">ID Proveedor</label>
-          <input class="input" type="number" name="id_proveedor" required>
+          <label class="label">Proveedor</label>
+          <select class="select" name="id_proveedor" id="id_proveedor" required>
+            <option value="" selected disabled>Seleccione…</option>
+          </select>
         </div>
         <div class="field">
-          <label class="label">ID Moneda</label>
-          <input class="input" type="number" name="id_mon" required>
+          <label class="label">Moneda (cotización)</label>
+          <select class="select" name="id_mon" id="id_mon" required>
+            <option value="" selected disabled>Seleccione…</option>
+          </select>
         </div>
 
+        <input type="hidden" name="moneda_doc" id="moneda_doc" value="GUARANI">
         <div class="field">
+          <label class="label">Cotización seleccionada</label>
+          <input class="input" type="number" step="0.0001" min="0" name="cotizacion_sel" id="cotizacion_sel" value="0" readonly>
+        </div>
+<div class="field">
           <label class="label">Timbrado</label>
           <input class="input" name="timbrado_com" required>
         </div>
@@ -72,16 +68,16 @@
         </div>
         <div class="field">
           <label class="label">Valor Documento</label>
-          <input class="input" type="number" step="0.01" name="valor_documento_com" required>
+          <input class="input" type="number" step="0.01" min="0" name="valor_documento_com" placeholder="0">
         </div>
 
-        <div class="form-actions span-3">
+     
+      </form>
+
+         <div class="form-actions span-3">
           <button class="btn" type="submit">Guardar</button>
           <button class="btn ghost" type="reset">Limpiar</button>
         </div>
-      </form>
-
-      
     </div>
 
     <!-- Panel derecho: listado -->
@@ -148,6 +144,62 @@
 const API_LIST='register_compra_bi.php',
       API_ADD ='register_compra_bi.php',
       API_DEL ='eliminar.php';
+const API_META='register_compra_bi.php?meta=1';
+const selProv = document.getElementById('id_proveedor');
+const selMon  = document.getElementById('id_mon');
+
+async function loadMeta(){
+  const r = await fetch(API_META,{cache:'no-store'});
+  const j = await safeJson(r);
+  if(!j || j.success!==true) return;
+
+  if(selProv && Array.isArray(j.proveedores)){
+    selProv.innerHTML = `<option value="" selected disabled>Seleccione…</option>` +
+      j.proveedores.map(p=>`<option value="${p.id}">${(p.nombre||('#'+p.id)).toString().replace(/</g,'&lt;')}</option>`).join('');
+  }
+  if(selMon && Array.isArray(j.monedas)){
+    selMon.innerHTML = `<option value="" selected disabled>Seleccione…</option>` +
+      j.monedas.map(m=>{
+        const label = (m.nombre||('#'+m.id)).toString().replace(/</g,'&lt;');
+        const md = (m.moneda_doc||'GUARANI');
+        const tasa = (m.tasa==null?'0':m.tasa);
+        return `<option value="${m.id}" data-moneda_doc="${md}" data-tasa="${tasa}">${label}</option>`;
+      }).join('');
+  }
+
+  // set default helper fields if already selected
+  onMonedaChange();
+}
+
+function onMonedaChange(){
+  const mdInput = document.getElementById('moneda_doc');
+  const tasaInput = document.getElementById('cotizacion_sel');
+  const hist = document.querySelector('textarea[name="historico_com"]');
+
+  const opt = selMon?.selectedOptions?.[0];
+  if(!opt){
+    if(mdInput) mdInput.value = 'GUARANI';
+    if(tasaInput) tasaInput.value = '0';
+    return;
+  }
+
+  const md = opt.dataset.moneda_doc || 'GUARANI';
+  const tasa = opt.dataset.tasa || '0';
+
+  if(mdInput) mdInput.value = md;
+  if(tasaInput) tasaInput.value = tasa;
+
+  // Si el usuario dejó histórico vacío, le ponemos un snapshot útil
+  if(hist && (!hist.value || hist.value.trim()==='' || hist.value.trim()==='Sin histórico')){
+    hist.value = `Sin histórico
+Moneda: ${md} | Cotización: ${tasa} | id_mon: ${selMon.value}`;
+  }
+}
+if(selMon){ selMon.addEventListener('change', onMonedaChange); }
+
+
+
+
 
 const tbody = document.getElementById('tbody'),
       buscar = document.getElementById('buscar'),
@@ -166,7 +218,7 @@ const toast=(t,m='',type='success')=>{
   w.appendChild(el);
   setTimeout(()=>{ el.style.opacity=0; setTimeout(()=>w.removeChild(el),300) },3200);
 };
-const safeJson=async r=>{try{return await r.json()}catch{return null}};
+async function safeJson(r){ try{ return await r.json(); } catch(e){ return null; } }
 const setLoad=()=>{tbody.innerHTML=Array.from({length:6}).map(()=>`
   <tr>
     <td><div class="skeleton"></div></td>
@@ -195,9 +247,9 @@ function render(){
     <tr class="data">
       <td class="mono nowrap">#${r.id_com??''}</td>
       <td>${r.fecha_com??''}</td>
-      <td>${r.id_proveedor??''}</td>
-      <td>${r.id_mon??''}</td>
-      <td>${r.timbrado_com??''}</td>
+      <td>${r.proveedor_nombre ?? (r.id_proveedor??'')}</td>
+      <td>${r.moneda_label ?? (r.id_mon??'')}</td>
+<td>${r.timbrado_com??''}</td>
       <td>${r.documento_com??''}</td>
       <td>${r.fecha_emision_comp??''}</td>
       <td>${(r.historico_com??'').replace(/</g,'&lt;')}</td>
@@ -242,10 +294,14 @@ next.onclick = ()=>{ page++; render(); };
 // Add
 document.getElementById('formAdd').addEventListener('submit', async e=>{
   e.preventDefault();
-  const r = await fetch(API_ADD,{method:'POST', body:new FormData(e.target)});
+  const fd = new FormData(e.target);
+  const v = (fd.get('valor_documento_com')||'').toString().trim();
+  if(v==='') fd.set('valor_documento_com','0');
+  const r = await fetch(API_ADD,{method:'POST', body:fd});
   const j = await safeJson(r);
   if(j && j.success===false){ toast('Error al guardar', j.message||'', 'error'); }
-  else { toast('Compra guardada'); e.target.reset(); load(); }
+  else { toast('Compra guardada'); e.target.reset(); loadMeta();
+load(); }
 });
 
 // Delete
@@ -255,9 +311,11 @@ window.delRow = async id=>{
   const r = await fetch(API_DEL,{method:'POST', body:f});
   const j = await safeJson(r);
   if(j && j.success===false){ toast('No se pudo eliminar', j.message||'', 'error'); }
-  else { toast('Eliminada'); load(); }
+  else { toast('Eliminada'); loadMeta();
+load(); }
 };
 
+loadMeta();
 load();
 </script>
 </body>

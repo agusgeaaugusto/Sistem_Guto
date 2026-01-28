@@ -314,8 +314,79 @@ ALTER SEQUENCE public.factura_id_factura_seq OWNED BY public.factura.id_factura;
 -- TOC entry 224 (class 1259 OID 33738)
 -- Name: moneda; Type: TABLE; Schema: public; Owner: postgres
 --
+-- =========================================================
+-- 1) NUEVA TABLA: historial de cotizaciones (versionado)
+-- =========================================================
 
-CREATE TABLE public.moneda (
+CREATE TABLE IF NOT EXISTS public.moneda (
+  id_mon         BIGSERIAL PRIMARY KEY,
+  guarani        NUMERIC(14,4) NOT NULL DEFAULT 1.0000,   -- normalmente base
+  real           NUMERIC(14,4) NOT NULL,
+  dolar          NUMERIC(14,4) NOT NULL,
+  estado         VARCHAR(10) NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO','INACTIVO')),
+  fecha_inicio   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  fecha_fin      TIMESTAMPTZ NULL,
+  creado_en      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- =========================================================
+-- 2) GARANTÍA: SOLO 1 ACTIVA A LA VEZ
+--    (índice único parcial)
+-- =========================================================
+CREATE UNIQUE INDEX IF NOT EXISTS ux_moneda_activa
+ON public.moneda ((1))
+WHERE estado = 'ACTIVO';
+
+-- =========================================================
+-- 3) TRIGGER: al INSERT, cerrar la activa anterior automáticamente
+-- =========================================================
+CREATE OR REPLACE FUNCTION public.fn_moneda_activar_nueva()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  -- Fuerza comportamiento: nueva fila SIEMPRE entra como activa
+  NEW.estado := 'ACTIVO';
+  NEW.fecha_inicio := COALESCE(NEW.fecha_inicio, NOW());
+  NEW.fecha_fin := NULL;
+
+  -- Cierra cualquier activa anterior
+  UPDATE public.moneda
+     SET estado = 'INACTIVO',
+         fecha_fin = NOW()
+   WHERE estado = 'ACTIVO';
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_moneda_activar_nueva ON public.moneda;
+
+CREATE TRIGGER trg_moneda_activar_nueva
+BEFORE INSERT ON public.moneda
+FOR EACH ROW
+EXECUTE FUNCTION public.fn_moneda_activar_nueva();
+
+-- =========================================================
+-- 4) VIEW ÚTIL: la cotización vigente (la activa)
+-- =========================================================
+CREATE OR REPLACE VIEW public.vw_moneda_vigente AS
+SELECT *
+FROM public.moneda
+WHERE estado = 'ACTIVO'
+ORDER BY fecha_inicio DESC
+LIMIT 1;
+
+-- =========================================================
+-- 5) (OPCIONAL) MIGRACIÓN desde tu tabla actual "moneda"
+--    Si ya tenés datos en public.moneda (id_mon, nombre_mon, tasa_cambio)
+--    y querés guardar al menos un "baseline", podés insertar una fila.
+--    (Esto es solo ejemplo; lo afinamos con tu estructura real)
+-- =========================================================
+-- INSERT INTO public.moneda_cambio (guarani, real, dolar)
+-- VALUES (1.0000, 0.0000, 0.0000);
+
+/*CREATE TABLE public.moneda (
     id_mon integer NOT NULL,
     nombre_mon character varying(50) NOT NULL,
     tasa_cambio numeric(14,4) NOT NULL
@@ -346,7 +417,7 @@ ALTER SEQUENCE public.moneda_id_mon_seq OWNER TO postgres;
 -- Name: moneda_id_mon_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public.moneda_id_mon_seq OWNED BY public.moneda.id_mon;
+ALTER SEQUENCE public.moneda_id_mon_seq OWNED BY public.moneda.id_mon;*/
 
 
 --

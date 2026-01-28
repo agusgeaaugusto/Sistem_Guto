@@ -1,43 +1,42 @@
 <?php
-include 'conexion_bi.php';
+declare(strict_types=1);
+header('Content-Type: application/json; charset=utf-8');
 
-// Función para validar un ID
-function validarID($id) {
-    return isset($id) && is_numeric($id);
+require_once __DIR__ . '/conexion_bi.php';
+if (!isset($conexion) || !$conexion) { http_response_code(500); echo json_encode(['success'=>false,'message'=>'Sin conexión DB']); exit; }
+
+function validarID($id): bool {
+  return isset($id) && is_numeric($id) && intval($id) > 0;
+}
+function num4($v): ?string {
+  if ($v === null) return null;
+  $s = trim((string)$v);
+  if ($s === '') return null;
+  $s = str_replace([' ', ','], ['', '.'], $s);
+  if (!is_numeric($s)) return null;
+  return $s;
 }
 
-// Función para editar una compra
-function editarCompra($id_com, $fecha_com, $id_proveedor) {
-    global $conexion;
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+  $id     = $_POST['id_mon'] ?? null;
+  $real   = num4($_POST['real']  ?? null);
+  $dolar  = num4($_POST['dolar'] ?? null);
+  $estado = strtoupper(trim((string)($_POST['estado'] ?? 'ACTIVO')));
 
-    // Validar el ID antes de realizar la edición
-    if (validarID($id_com)) {
-        // Preparar la consulta con consultas preparadas para evitar inyecciones SQL
-        $query = "UPDATE Compra SET fecha_com = $1, id_proveedor = $2 WHERE id_com = $3";
-        $result = pg_query_params($conexion, $query, array($fecha_com, $id_proveedor, $id_com));
+  if (!validarID($id) || $real === null || $dolar === null) {
+    echo json_encode(['success'=>false,'message'=>'Datos inválidos o incompletos.']); exit;
+  }
+  if ($estado !== 'ACTIVO' && $estado !== 'INACTIVO') $estado = 'ACTIVO';
 
-        if (!$result) {
-            die("Error en la consulta de actualización: " . pg_last_error());
-        }
+  $q = "UPDATE moneda SET real=$1, dolar=$2, estado=$3 WHERE id_mon=$4";
+  $r = pg_query_params($conexion, $q, [$real, $dolar, $estado, $id]);
 
-        // Devolver una respuesta JSON exitosa
-        echo json_encode(array('success' => true));
-    } else {
-        // Devolver una respuesta JSON con error si el ID no es válido
-        echo json_encode(array('success' => false, 'message' => 'ID de compra no válido.'));
-    }
-}
+  if (!$r) {
+    echo json_encode(['success'=>false,'message'=>'Error DB: '.pg_last_error($conexion)]); exit;
+  }
 
-// Verificar si se proporciona un ID válido y los nuevos datos
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['id_com']) && isset($_POST['fecha_com']) && isset($_POST['id_proveedor'])) {
-    $id_com = $_POST['id_com'];
-    $fecha_com = $_POST['fecha_com'];
-    $id_proveedor = $_POST['id_proveedor'];
-
-    // Editar la compra con los nuevos datos
-    editarCompra($id_com, $fecha_com, $id_proveedor);
+  echo json_encode(['success'=>true,'message'=>'Cotización actualizada correctamente.']);
 } else {
-    // Devolver una respuesta JSON con error si no se proporciona un ID o los nuevos datos
-    echo json_encode(array('success' => false, 'message' => 'Datos de la compra no proporcionados.'));
+  echo json_encode(['success'=>false,'message'=>'Método no permitido.']);
 }
-?>
+pg_close($conexion);

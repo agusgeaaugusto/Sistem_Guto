@@ -14,22 +14,9 @@
   <title>Categorías</title>
 
   <!-- 🔗 Estilo global (ruta correcta desde /php/categoria/ → /assets/css/) -->
-<link rel="stylesheet" href="../css/app-forms.css?v=20260103-1">
+<link rel="stylesheet" href="../css/app-forms.css?v=20260127-std">
 
   <!-- Layout mínimo de la página (estructura nada más) -->
-  <style>
-    body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      display:flex; align-items:flex-start; justify-content:center;
-      padding:24px;
-    }
-    .app{ width:min(1200px,100%); display:grid; gap:18px }
-    .header{ display:flex; align-items:center; justify-content:space-between }
-    .title{ font-weight:800; font-size: clamp(18px, 2.2vw, 26px) }
-    .grid{ display:grid; grid-template-columns: 420px 1fr; gap:18px }
-    @media (max-width: 920px){ .grid{ grid-template-columns: 1fr } }
-  </style>
 </head>
 <body>
 <div class="app" role="application" aria-label="Gestión de Categorías">
@@ -49,11 +36,12 @@
           
         </div>
 
-        <div class="form-actions">
+       
+      </form>
+       <div class="form-actions">
           <button class="btn" id="btnGuardar" type="submit">Guardar</button>
           <button type="reset" class="btn ghost">Limpiar</button>
         </div>
-      </form>
     </div>
 
     <!-- Panel derecho: listado -->

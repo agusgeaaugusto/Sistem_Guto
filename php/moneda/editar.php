@@ -1,51 +1,42 @@
 <?php
-require_once 'conexion_bi.php';
+declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 
-/**
- * Verifica que el ID sea válido
- */
-function validarID($id) {
-    return isset($id) && is_numeric($id) && intval($id) > 0;
+require_once __DIR__ . '/conexion_bi.php';
+if (!isset($conexion) || !$conexion) { http_response_code(500); echo json_encode(['success'=>false,'message'=>'Sin conexión DB']); exit; }
+
+function validarID($id): bool {
+  return isset($id) && is_numeric($id) && intval($id) > 0;
+}
+function num4($v): ?string {
+  if ($v === null) return null;
+  $s = trim((string)$v);
+  if ($s === '') return null;
+  $s = str_replace([' ', ','], ['', '.'], $s);
+  if (!is_numeric($s)) return null;
+  return $s;
 }
 
-/**
- * Actualiza el registro de la moneda
- */
-function editarMoneda($id, $nuevoNombre, $nuevaTasa) {
-    global $conexion;
-
-    $query = "UPDATE Moneda SET nombre_mon = $1, tasa_cambio = $2 WHERE id_mon = $3";
-    $result = pg_query_params($conexion, $query, [$nuevoNombre, $nuevaTasa, $id]);
-
-    if (!$result) {
-        return ['success' => false, 'message' => 'Error en la consulta: ' . pg_last_error($conexion)];
-    }
-
-    return ['success' => true, 'message' => 'Moneda actualizada correctamente.'];
-}
-
-/**
- * Punto de entrada principal
- */
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $id     = $_POST['id_mon'] ?? null;
-    $nombre = trim($_POST['nombre_mon'] ?? '');
-    $tasa   = trim($_POST['tasa_cambio'] ?? '');
+  $id     = $_POST['id_mon'] ?? null;
+  $real   = num4($_POST['real']  ?? null);
+  $dolar  = num4($_POST['dolar'] ?? null);
+  $estado = strtoupper(trim((string)($_POST['estado'] ?? 'ACTIVO')));
 
-    if (!validarID($id) || empty($nombre) || !is_numeric($tasa)) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Datos inválidos o incompletos. Verifica los campos.'
-        ]);
-        exit;
-    }
+  if (!validarID($id) || $real === null || $dolar === null) {
+    echo json_encode(['success'=>false,'message'=>'Datos inválidos o incompletos.']); exit;
+  }
+  if ($estado !== 'ACTIVO' && $estado !== 'INACTIVO') $estado = 'ACTIVO';
 
-    $respuesta = editarMoneda($id, $nombre, $tasa);
-    echo json_encode($respuesta);
+  $q = "UPDATE moneda SET real=$1, dolar=$2, estado=$3 WHERE id_mon=$4";
+  $r = pg_query_params($conexion, $q, [$real, $dolar, $estado, $id]);
+
+  if (!$r) {
+    echo json_encode(['success'=>false,'message'=>'Error DB: '.pg_last_error($conexion)]); exit;
+  }
+
+  echo json_encode(['success'=>true,'message'=>'Cotización actualizada correctamente.']);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
+  echo json_encode(['success'=>false,'message'=>'Método no permitido.']);
 }
-
 pg_close($conexion);
-?>

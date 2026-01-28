@@ -1,145 +1,164 @@
 <?php
-include 'conexion_bi.php'; // Conexión con la base de datos
+include 'conexion_bi.php';
+header('Content-Type: application/json; charset=UTF-8');
 
-// Función para redirigir después de la operación
-function redireccionar() {
-    header("Location: register_producto_detalle_bi.php");
-    exit();
+// =========================================================
+// API ProductoDetalle
+// - GET  : lista (filtra por id_com opcional) o detalle por id_det_pro
+//          /register_producto_detalle_bi.php?id_com=12
+//          /register_producto_detalle_bi.php?id_det_pro=5
+// - POST : crear/actualizar (por codigo_barra_pro + id_com)
+// - POST : eliminar (action=delete&id_det_pro=5)
+// =========================================================
+
+function out($arr, int $code = 200){
+  http_response_code($code);
+  echo json_encode($arr);
+  exit;
 }
 
-// Función para verificar si un ID de compra existe en la base de datos
-function verificarCompra($conexion, $id_com) {
-    $query = "SELECT id_com FROM Compra WHERE id_com = $1";
-    $result = pg_query_params($conexion, $query, array($id_com));
-    return pg_num_rows($result) > 0;
+function requireInt($key){
+  if(!isset($_REQUEST[$key]) || $_REQUEST[$key] === '') return null;
+  if(!is_numeric($_REQUEST[$key])) return null;
+  return (int)$_REQUEST[$key];
 }
 
-// Manejo de solicitudes POST (inserción o actualización de productos detalle)
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Obtener y limpiar los datos del formulario
-    $id_pro = isset($_POST['id_pro']) ? (int)$_POST['id_pro'] : null;
-    $id_com = isset($_POST['id_com']) ? (int)$_POST['id_com'] : null;
-    $codigo_barra_pro = isset($_POST['codigo_barra_pro']) ? htmlspecialchars($_POST['codigo_barra_pro']) : '';
-    $cantidad_caja_pro = isset($_POST['cantidad_caja_pro']) ? (int)$_POST['cantidad_caja_pro'] : 0;
-    $uni_caja_pro = isset($_POST['uni_caja_pro']) ? (int)$_POST['uni_caja_pro'] : 0;
-    $costo_caja_pro = isset($_POST['costo_caja_pro']) ? (float)$_POST['costo_caja_pro'] : 0.0;
-    $precio1_pro = isset($_POST['precio1_pro']) ? (float)$_POST['precio1_pro'] : 0.0;
-    $precio2_pro = isset($_POST['precio2_pro']) ? (float)$_POST['precio2_pro'] : 0.0;
-    $precio3_pro = isset($_POST['precio3_pro']) ? (float)$_POST['precio3_pro'] : 0.0;
-    $porcen_pro = isset($_POST['porcen_pro']) ? (float)$_POST['porcen_pro'] : 0.0;
-    $fecha_ven_pro = isset($_POST['fecha_ven_pro']) && !empty($_POST['fecha_ven_pro']) ? $_POST['fecha_ven_pro'] : null;
-
-    // Calcular cantidad_uni_pro y costo_uni_pro
-    $cantidad_uni_pro = $cantidad_caja_pro * $uni_caja_pro;
-    $costo_uni_pro = ($uni_caja_pro > 0) ? $costo_caja_pro / $uni_caja_pro : 0.0;
-
-    // Validar los campos obligatorios
-    if ($id_pro === null || $id_com === null || empty($codigo_barra_pro) || $cantidad_caja_pro == 0 || $uni_caja_pro == 0) {
-        echo json_encode(["success" => false, "error" => "Todos los campos son obligatorios"]);
-        exit();
-    }
-
-    // Verificar si el ID de compra existe
-    if (!verificarCompra($conexion, $id_com)) {
-        echo json_encode(["success" => false, "error" => "El ID de compra no existe en la base de datos"]);
-        exit();
-    }
-
-    // Verificar si el producto ya existe en ProductoDetalle
-    $query = "SELECT * FROM ProductoDetalle WHERE codigo_barra_pro = $1 AND id_com = $2";
-    $result = pg_query_params($conexion, $query, array($codigo_barra_pro, $id_com));
-
-    if ($producto_existente = pg_fetch_assoc($result)) {
-        // Actualizar el producto existente
-        $nuevaCantidadCaja = $producto_existente['cantidad_caja_pro'] + $cantidad_caja_pro;
-        $nuevaCantidadUni = $producto_existente['cantidad_uni_pro'] + $cantidad_uni_pro;
-
-        $updateQuery = "UPDATE ProductoDetalle SET 
-                        cantidad_caja_pro = $1, 
-                        cantidad_uni_pro = $2, 
-                        costo_caja_pro = $3, 
-                        costo_uni_pro = $4, 
-                        precio1_pro = $5, 
-                        precio2_pro = $6, 
-                        precio3_pro = $7, 
-                        uni_caja_pro = $8,
-                        fecha_ven_pro = $9,
-                        porcen_pro = $10
-                        WHERE codigo_barra_pro = $11 AND id_com = $12";
-        $params = array(
-            $nuevaCantidadCaja, 
-            $nuevaCantidadUni, 
-            $costo_caja_pro, 
-            $costo_uni_pro, 
-            $precio1_pro, 
-            $precio2_pro, 
-            $precio3_pro, 
-            $uni_caja_pro, 
-            $fecha_ven_pro, 
-            $porcen_pro, 
-            $codigo_barra_pro, 
-            $id_com
-        );
-        pg_query_params($conexion, $updateQuery, $params);
-    } else {
-        // Insertar nuevo producto detalle
-        $insertQuery = "INSERT INTO ProductoDetalle (id_pro, id_com, codigo_barra_pro, cantidad_caja_pro, cantidad_uni_pro, costo_caja_pro, costo_uni_pro, precio1_pro, precio2_pro, precio3_pro, uni_caja_pro, fecha_ven_pro, porcen_pro) 
-                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)";
-        $params = array(
-            $id_pro,
-            $id_com,
-            $codigo_barra_pro, 
-            $cantidad_caja_pro, 
-            $cantidad_uni_pro, 
-            $costo_caja_pro, 
-            $costo_uni_pro, 
-            $precio1_pro, 
-            $precio2_pro, 
-            $precio3_pro, 
-            $uni_caja_pro, 
-            $fecha_ven_pro, 
-            $porcen_pro
-        );
-        pg_query_params($conexion, $insertQuery, $params);
-    }
-
-    echo json_encode(["success" => true, "message" => "Producto detalle guardado correctamente"]);
-    pg_close($conexion);
-    exit();
+function verificarCompra($cn, int $id_com): bool {
+  $q = pg_query_params($cn, "SELECT 1 FROM compra WHERE id_com=$1 LIMIT 1", [$id_com]);
+  return $q && pg_num_rows($q) > 0;
 }
 
-// Obtener todos los productos detalle (solicitud GET para listado)
-if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    $query = "SELECT * FROM ProductoDetalle ORDER BY id_det_pro ASC";
-    $result = pg_query($conexion, $query);
+if(!$conexion){ out(['success'=>false,'error'=>'Sin conexión DB'], 500); }
 
-    if (!$result) {
-        echo json_encode(["success" => false, "error" => pg_last_error()]);
-        exit();
+// -------------------- GET --------------------
+if($_SERVER['REQUEST_METHOD'] === 'GET'){
+  // 1) Traer un detalle por id
+  $id_det_pro = requireInt('id_det_pro');
+  if($id_det_pro){
+    $q = "SELECT * FROM productodetalle WHERE id_det_pro=$1";
+    $r = pg_query_params($conexion, $q, [$id_det_pro]);
+    if($r && ($row = pg_fetch_assoc($r))){
+      out(['success'=>true,'data'=>$row]);
     }
+    out(['success'=>false,'error'=>'Producto detalle no encontrado'], 404);
+  }
 
-    $productos = array();
-    while ($row = pg_fetch_assoc($result)) {
-        $productos[] = $row;
+  // 2) Listar (por compra si viene)
+  $id_com = requireInt('id_com');
+  if($id_com){
+    $q = "SELECT * FROM productodetalle WHERE id_com=$1 ORDER BY id_det_pro DESC";
+    $r = pg_query_params($conexion, $q, [$id_com]);
+  } else {
+    $q = "SELECT * FROM productodetalle ORDER BY id_det_pro DESC";
+    $r = pg_query($conexion, $q);
+  }
+
+  if(!$r){ out(['success'=>false,'error'=>pg_last_error($conexion)], 500); }
+
+  $data = [];
+  while($row = pg_fetch_assoc($r)){
+    // normalizar fecha
+    if(isset($row['fecha_ven_pro']) && $row['fecha_ven_pro'] !== null){
+      $row['fecha_ven_pro'] = substr((string)$row['fecha_ven_pro'], 0, 10);
     }
-
-    echo json_encode(["success" => true, "data" => $productos]);
-    pg_close($conexion);
-    exit();
+    $data[] = $row;
+  }
+  out(['success'=>true,'data'=>$data]);
 }
 
-// Obtener datos de un producto detalle por ID (solicitud GET)
-if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['id_det_pro'])) {
-    $id_det_pro = (int)$_GET['id_det_pro'];
-    $query = "SELECT * FROM ProductoDetalle WHERE id_det_pro = $1";
-    $result = pg_query_params($conexion, $query, array($id_det_pro));
+// -------------------- POST --------------------
+if($_SERVER['REQUEST_METHOD'] === 'POST'){
+  // Eliminar
+  $action = isset($_POST['action']) ? (string)$_POST['action'] : '';
+  $id_det_pro = requireInt('id_det_pro');
+  if(($action === 'delete' || ($id_det_pro && $action === '')) && $id_det_pro){
+    $r = pg_query_params($conexion, "DELETE FROM productodetalle WHERE id_det_pro=$1", [$id_det_pro]);
+    if(!$r){ out(['success'=>false,'error'=>pg_last_error($conexion)], 500); }
+    out(['success'=>true,'message'=>'Eliminado']);
+  }
 
-    if ($producto = pg_fetch_assoc($result)) {
-        echo json_encode(["success" => true, "data" => $producto]);
-    } else {
-        echo json_encode(["success" => false, "error" => "Producto detalle no encontrado"]);
-    }
-    pg_close($conexion);
-    exit();
+  // Crear / actualizar
+  $id_pro = isset($_POST['id_pro']) ? (int)$_POST['id_pro'] : 0;
+  $id_com = isset($_POST['id_com']) ? (int)$_POST['id_com'] : 0;
+  $codigo = isset($_POST['codigo_barra_pro']) ? trim((string)$_POST['codigo_barra_pro']) : '';
+
+  $cantidad_caja = isset($_POST['cantidad_caja_pro']) ? (float)$_POST['cantidad_caja_pro'] : 0;
+  $uni_caja = isset($_POST['uni_caja_pro']) ? (float)$_POST['uni_caja_pro'] : 0;
+
+  $costo_caja = isset($_POST['costo_caja_pro']) ? (float)$_POST['costo_caja_pro'] : 0;
+  $porcen = isset($_POST['porcen_pro']) ? (float)$_POST['porcen_pro'] : 0;
+
+  // 👉 Si el usuario editó manualmente, respetamos lo que venga.
+  $cantidad_uni = isset($_POST['cantidad_uni_pro']) && $_POST['cantidad_uni_pro'] !== ''
+    ? (float)$_POST['cantidad_uni_pro']
+    : ($cantidad_caja * $uni_caja);
+
+  $costo_uni = isset($_POST['costo_uni_pro']) && $_POST['costo_uni_pro'] !== ''
+    ? (float)$_POST['costo_uni_pro']
+    : (($uni_caja > 0) ? ($costo_caja / $uni_caja) : 0);
+
+  $precio1 = isset($_POST['precio1_pro']) ? (float)$_POST['precio1_pro'] : 0;
+  $precio2 = isset($_POST['precio2_pro']) ? (float)$_POST['precio2_pro'] : 0;
+  $precio3 = isset($_POST['precio3_pro']) ? (float)$_POST['precio3_pro'] : 0;
+
+  $fecha_ven = (isset($_POST['fecha_ven_pro']) && trim((string)$_POST['fecha_ven_pro']) !== '')
+    ? trim((string)$_POST['fecha_ven_pro'])
+    : null;
+
+  if($id_pro<=0 || $id_com<=0 || $codigo==='' || $cantidad_caja<=0 || $uni_caja<=0){
+    out(['success'=>false,'message'=>'Faltan datos obligatorios (id_com, id_pro, código, cajas, unid/caja).'], 400);
+  }
+
+  if(!verificarCompra($conexion, $id_com)){
+    out(['success'=>false,'message'=>'El ID de compra no existe en la base de datos.'], 400);
+  }
+
+  // Si ya existe el mismo producto en la misma compra, acumulamos (tu lógica original)
+  $qExist = "SELECT id_det_pro, cantidad_caja_pro, cantidad_uni_pro
+             FROM productodetalle
+             WHERE codigo_barra_pro=$1 AND id_com=$2
+             ORDER BY id_det_pro DESC
+             LIMIT 1";
+  $rExist = pg_query_params($conexion, $qExist, [$codigo, $id_com]);
+
+  if($rExist && ($ex = pg_fetch_assoc($rExist))){
+    $nuevoCaja = (float)$ex['cantidad_caja_pro'] + $cantidad_caja;
+    $nuevoUni  = (float)$ex['cantidad_uni_pro'] + $cantidad_uni;
+
+    $qUp = "UPDATE productodetalle SET
+              id_pro=$1,
+              cantidad_caja_pro=$2,
+              cantidad_uni_pro=$3,
+              costo_caja_pro=$4,
+              costo_uni_pro=$5,
+              precio1_pro=$6,
+              precio2_pro=$7,
+              precio3_pro=$8,
+              uni_caja_pro=$9,
+              fecha_ven_pro=$10,
+              porcen_pro=$11
+            WHERE id_det_pro=$12";
+
+    $params = [$id_pro, $nuevoCaja, $nuevoUni, $costo_caja, $costo_uni, $precio1, $precio2, $precio3, $uni_caja, $fecha_ven, $porcen, (int)$ex['id_det_pro']];
+    $rUp = pg_query_params($conexion, $qUp, $params);
+    if(!$rUp){ out(['success'=>false,'message'=>'Error al actualizar','error'=>pg_last_error($conexion)], 500); }
+
+    out(['success'=>true,'message'=>'Producto detalle actualizado']);
+  }
+
+  $qIns = "INSERT INTO productodetalle
+            (id_pro, id_com, codigo_barra_pro, cantidad_caja_pro, cantidad_uni_pro,
+             costo_caja_pro, costo_uni_pro, precio1_pro, precio2_pro, precio3_pro,
+             uni_caja_pro, fecha_ven_pro, porcen_pro)
+           VALUES
+            ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+           RETURNING id_det_pro";
+  $params = [$id_pro, $id_com, $codigo, $cantidad_caja, $cantidad_uni, $costo_caja, $costo_uni, $precio1, $precio2, $precio3, $uni_caja, $fecha_ven, $porcen];
+  $rIns = pg_query_params($conexion, $qIns, $params);
+  if(!$rIns){ out(['success'=>false,'message'=>'Error al insertar','error'=>pg_last_error($conexion)], 500); }
+
+  $new = pg_fetch_assoc($rIns);
+  out(['success'=>true,'message'=>'Producto detalle guardado','id_det_pro'=>$new['id_det_pro'] ?? null]);
 }
-?>
+
+out(['success'=>false,'error'=>'Método no permitido'], 405);

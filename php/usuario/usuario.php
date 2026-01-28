@@ -9,72 +9,9 @@
   <title>Gestión de Usuarios</title>
 
   <!-- Si no tenés este CSS, igual funciona: es solo estética -->
-  <link rel="stylesheet" href="../css/app-forms.css?v=20260103-1">
+  <link rel="stylesheet" href="../css/app-forms.css?v=20260127-std">
 
-  <style>
-    body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      display:flex; align-items:flex-start; justify-content:center;
-      padding:24px;
-      background: radial-gradient(1200px 600px at 110% -10%,rgba(124,92,255,.12),transparent 50%),
-                  radial-gradient(1000px 500px at -10% 110%,rgba(110,231,255,.12),transparent 50%),
-                  #0c0d12;
-      color:#e6e9f5;
-    }
-    .app{ width:min(1100px,100%); display:grid; gap:18px }
-    .header{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap }
-    .title{ font-weight:800; letter-spacing:.3px; font-size:clamp(18px,2.4vw,26px);
-      background:linear-gradient(90deg,#e6e9f5,#6ee7ff);
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-    }
-    .card{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px; }
-    .grid{ display:grid; grid-template-columns: 380px 1fr; gap:18px }
-    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
-    .form-title{ margin:0 0 10px; font-size:14px; color:#cfd6ff; opacity:.9 }
-    .field{ margin:10px 0; }
-    .label{ display:block; margin:0 0 6px; font-size:12px; color:#b9c2ff; opacity:.9 }
-    .input, .select{
-      width:100%; padding:10px 12px; border-radius:12px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.25);
-      color:#e6e9f5;
-      outline:none;
-    }
-    .input:focus, .select:focus{ border-color: rgba(110,231,255,.55); box-shadow: 0 0 0 4px rgba(110,231,255,.12); }
-    .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
-    @media (max-width: 520px){ .row2{ grid-template-columns:1fr; } }
-    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px }
-    .btn{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color:#e6e9f5;
-      padding:10px 12px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:700;
-    }
-    .btn.primary{ background: linear-gradient(90deg, rgba(110,231,255,.18), rgba(124,92,255,.18)); border-color: rgba(110,231,255,.35); }
-    .btn.danger{ background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.38); }
-    .table-wrap{ overflow:auto; }
-    table{ width:100%; border-collapse:collapse; min-width:720px; }
-    th,td{ text-align:left; padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.08); font-size:13px; }
-    th{ color:#b9c2ff; font-size:12px; text-transform:uppercase; letter-spacing:.8px; }
-    .pill{ display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14); font-size:12px;}
-    .pill.on{ background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.35); }
-    .pill.off{ background: rgba(239,68,68,.10); border-color: rgba(239,68,68,.30); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    dialog{ border:none; border-radius:16px; padding:0; max-width:520px; width:min(520px, 96vw); background:#0f121a; color:#e6e9f5; border:1px solid rgba(255,255,255,.12); }
-    dialog::backdrop{ background: rgba(0,0,0,.55); }
-    .dlg-h{ padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; justify-content:space-between; align-items:center; gap:10px }
-    .dlg-b{ padding:14px 16px; }
-    .toast{ position:fixed; right:18px; bottom:18px; padding:12px 14px; border-radius:14px;
-      background: rgba(0,0,0,.70); border:1px solid rgba(255,255,255,.14); color:#e6e9f5;
-      max-width:min(420px, 92vw); display:none;
-    }
-    .toast.show{ display:block; }
-    .toast small{ display:block; opacity:.8; margin-top:2px }
-  </style>
+  
 </head>
 
 <body>
@@ -88,8 +25,8 @@
       <!-- Panel izquierdo: alta -->
       <div class="card">
         <h2 class="form-title">Agregar usuario</h2>
-
-        <form id="formAdd" autocomplete="off" novalidate>
+<div class="form-card">
+<form id="formAdd" autocomplete="off" novalidate class="app-form">
           <div class="field">
             <label class="label">Nombre de usuario</label>
             <input class="input" name="nombre_usu" required>
@@ -115,13 +52,15 @@
             </div>
           </div>
 
+        
+
+          
+        </form>
           <div class="actions">
             <button class="btn primary" id="btnAdd" type="submit">Guardar</button>
             <button class="btn" type="reset">Limpiar</button>
           </div>
-
-          
-        </form>
+</div>
       </div>
 
       <!-- Panel derecho: listado -->
@@ -158,7 +97,7 @@
       <button class="btn" id="cancelE" type="button">Cerrar</button>
     </div>
     <div class="dlg-b">
-      <form id="formEdit" autocomplete="off" novalidate>
+      <form id="formEdit" autocomplete="off" novalidate class="app-form">
         <input type="hidden" name="id_usu" id="edit_id">
 
         <div class="field">

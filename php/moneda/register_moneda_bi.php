@@ -1,42 +1,52 @@
 <?php
-include 'conexion_bi.php';
+declare(strict_types=1);
+header('Content-Type: application/json; charset=UTF-8');
 
-// Función para redirigir después de una operación
-function redireccionar() {
-    header("Location: register_moneda_bi.php");
-    exit();
+require_once __DIR__ . '/conexion_bi.php';
+if (!isset($conexion) || !$conexion) { http_response_code(500); echo json_encode(['success'=>false,'message'=>'Sin conexión DB']); exit; }
+
+function num4($v): ?string {
+  if ($v === null) return null;
+  $s = trim((string)$v);
+  if ($s === '') return null;
+  // Permitir coma decimal
+  $s = str_replace([' ', ','], ['', '.'], $s);
+  if (!is_numeric($s)) return null;
+  return $s;
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Recuperar datos del formulario
-    $nombre_mon = isset($_POST['nombre_mon']) ? htmlspecialchars($_POST['nombre_mon']) : '';
-    $tasa_cambio = isset($_POST['tasa_cambio']) ? htmlspecialchars($_POST['tasa_cambio']) : '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $real   = num4($_POST['real']  ?? null);
+  $dolar  = num4($_POST['dolar'] ?? null);
+  $estado = strtoupper(trim((string)($_POST['estado'] ?? 'ACTIVO')));
 
-    // Validar los datos
-    if (empty($nombre_mon) || empty($tasa_cambio)) {
-        die("Por favor, completa todos los campos.");
-    }
+  if ($real === null || $dolar === null) {
+    echo json_encode(['success'=>false,'message'=>'Real y Dólar son obligatorios y deben ser numéricos.']); exit;
+  }
+  if ($estado !== 'ACTIVO' && $estado !== 'INACTIVO') $estado = 'ACTIVO';
 
-    // Insertar datos en la base de datos
-    $query = "INSERT INTO Moneda (nombre_mon, tasa_cambio) VALUES ($1, $2)";
-    $result = pg_query_params($conexion, $query, array($nombre_mon, $tasa_cambio));
+  $q = "INSERT INTO moneda (guarani, real, dolar, estado) VALUES (1.0000, $1, $2, $3)";
+  $r = pg_query_params($conexion, $q, [$real, $dolar, $estado]);
 
-    if (!$result) {
-        die("Error en la consulta: " . pg_last_error());
-    }
+  if (!$r) {
+    http_response_code(400);
+    echo json_encode(['success'=>false,'message'=>'Error DB: '.pg_last_error($conexion)]);
+    exit;
+  }
 
-    redireccionar();
+  echo json_encode(['success'=>true]);
+  pg_close($conexion);
+  exit;
 }
 
-// Obtener todas las monedas ordenadas por ID
-$query = "SELECT * FROM Moneda ORDER BY id_mon ASC";
-$result = pg_query($conexion, $query);
-
-$monedas = array();
-while ($row = pg_fetch_assoc($result)) {
-    $monedas[] = $row;
+// GET: listado
+$q = "SELECT id_mon, guarani, real, dolar, estado, fecha_inicio
+      FROM moneda
+      ORDER BY (CASE WHEN estado='ACTIVO' THEN 0 ELSE 1 END) ASC, creado_en DESC, id_mon DESC;";
+$r = pg_query($conexion, $q);
+$data = [];
+if ($r) {
+  while ($row = pg_fetch_assoc($r)) { $data[] = $row; }
 }
-
-echo json_encode($monedas);
+echo json_encode($data);
 pg_close($conexion);
-?>
